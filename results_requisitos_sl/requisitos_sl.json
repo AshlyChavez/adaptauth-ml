@@ -1,0 +1,131 @@
+{
+  "RNF07_score_medio_legitimos": {
+    "meta": "< 0.30",
+    "media": 0.023767294143905368,
+    "mediana": 0.00787657692445313,
+    "p95": 0.07970267945986824,
+    "media_sospechosos": 0.47918895890134855,
+    "cumple": true
+  },
+  "RF07_registro": {
+    "eventos": 20852,
+    "registrados": 20852,
+    "cumple": true,
+    "decisiones": {
+      "acceso_directo": 19930,
+      "bloqueo": 855,
+      "otp": 67
+    }
+  },
+  "P1_contingencia": {
+    "eventos_simulados": 2000,
+    "con_otp": 2000,
+    "porcentaje_otp": 100.0,
+    "cumple": true
+  },
+  "RNF04_respuesta_C1_C4_ms": {
+    "meta": "<= 200 ms",
+    "p50": 12.034690000000126,
+    "p95": 17.32276239999706,
+    "p99": 19.275050990000572,
+    "cumple": true
+  },
+  "RNF10_explicabilidad": {
+    "alertas": 922,
+    "con_top3": 922,
+    "ms_por_explicacion": 1.7911507548806844,
+    "variables_mas_frecuentes": {
+      "continent_Americas": 790,
+      "ip_country_Brazil": 492,
+      "distinct_ips_30d": 413,
+      "ip_country_Chile": 212,
+      "ip_country_Colombia": 155,
+      "ip_country_Argentina": 152,
+      "is_night_login": 134,
+      "ip_country_Mexico": 108
+    },
+    "ejemplos": [
+      {
+        "record_id": 28380,
+        "score_R": 0.219,
+        "decision": "otp",
+        "etiqueta": 0,
+        "variable_1": "distinct_users_per_network_24h",
+        "variable_2": "logins_30d",
+        "variable_3": "login_type_reauth"
+      },
+      {
+        "record_id": 14024,
+        "score_R": 0.213,
+        "decision": "otp",
+        "etiqueta": 0,
+        "variable_1": "distinct_ips_30d",
+        "variable_2": "distinct_users_per_network_24h",
+        "variable_3": "ip_country_Brazil"
+      },
+      {
+        "record_id": 13921,
+        "score_R": 0.342,
+        "decision": "bloqueo",
+        "etiqueta": 0,
+        "variable_1": "distinct_ips_30d",
+        "variable_2": "distinct_users_per_network_24h",
+        "variable_3": "ip_country_Brazil"
+      },
+      {
+        "record_id": 13841,
+        "score_R": 0.379,
+        "decision": "bloqueo",
+        "etiqueta": 0,
+        "variable_1": "logins_30d",
+        "variable_2": "login_type_exchange",
+        "variable_3": "hours_since_last_login"
+      },
+      {
+        "record_id": 13928,
+        "score_R": 0.532,
+        "decision": "bloqueo",
+        "etiqueta": 1,
+        "variable_1": "distinct_ips_30d",
+        "variable_2": "distinct_users_per_network_24h",
+        "variable_3": "ip_country_Brazil"
+      }
+    ],
+    "cumple": true
+  },
+  "C6_reentrenamiento": {
+    "prueba": "junio",
+    "estatico": {
+      "entrenado": "dic-mar",
+      "calibrado": "abr",
+      "f1": 0.6629213483146067,
+      "fpr": 0.00600362483008609,
+      "recall": 0.5355521936459909
+    },
+    "reentrenado": {
+      "entrenado": "dic-abr",
+      "calibrado": "may",
+      "f1": 0.6672760511882997,
+      "fpr": 0.007702763932940644,
+      "recall": 0.5521936459909228
+    },
+    "eventos_excluidos_antienvenenamiento": 109,
+    "diferencia_f1_puntos": 0.4354702873692995,
+    "CA_C6_02_cumple": true
+  },
+  "RNF08_reentrenamiento_500k": {
+    "meta": "<= 15 min",
+    "segundos": 39.63235822899999,
+    "minutos": 0.6605393038166665,
+    "cumple": true,
+    "nota": "500 000 eventos remuestreados del entrenamiento"
+  },
+  "referencia": {
+    "f1_theta1": 0.6282513005202081,
+    "precision": 0.851409978308026,
+    "recall": 0.49778059606848446,
+    "fpr": 0.007107652399481194,
+    "seg_entrenamiento_base": 3.2087566280000033,
+    "filas_entrenamiento": 35969
+  }
+}
