@@ -80,6 +80,8 @@ python run_requisitos_sl.py   --data data/suspicious_logins_public_v1.csv
 python run_cert_v2.py --dir data/CERT_r4.2
 ```
 
+**Demostración en Colab:** `notebooks/00_AdaptAuthML_Demo.ipynb` descarga este repositorio y el dataset, ejecuta los tres experimentos y muestra los resultados ([abrir en Colab](https://colab.research.google.com/github/AshlyChavez/adaptauth-ml/blob/main/notebooks/00_AdaptAuthML_Demo.ipynb)).
+
 En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los datos desde la carpeta `AdaptAuth-ML` y guardan los resultados en la misma carpeta.
 
 ## Resultados principales
