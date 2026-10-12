@@ -1,0 +1,13 @@
+# Datos (no se versionan)
+data/*
+!data/README.md
+*.zip
+*.parquet
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Salidas de corridas locales del histórico
+historico_rba/resultados/salida/
