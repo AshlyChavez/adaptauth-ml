@@ -44,15 +44,18 @@ adaptauth-ml/
 ├── src/
 │   ├── adaptauth.py            # núcleo: reescalado, score, calibración, decisión, métricas, pruebas pareadas
 │   ├── cert.py                 # carga y variables de CERT r4.2 (unidad usuario-día)
+│   ├── modelo_apilado.py       # AdaptAuth-ML: Isolation Forest + HistGradientBoosting apilado
 │   └── figures.py              # figuras de resultados
 ├── run_suspiciouslogin.py      # experimento principal en SuspiciousLogin
-├── run_requisitos_sl.py        # verificación de requisitos no funcionales
+├── run_requisitos_sl.py        # verificación de requisitos no funcionales (modelo apilado)
+├── run_analisis_complementario.py  # ablación sin IF, bootstrap por usuario, curva de la línea base, V de Aiken
 ├── run_cert_v2.py              # experimento en CERT r4.2 con validación cruzada por empleado
 ├── notebooks/                  # cuadernos de Google Colab
 │   └── historico/              # versiones previas (dataset RBA)
 ├── results_sl/                 # resultados reales de SuspiciousLogin
 ├── results_requisitos_sl/      # matriz de cumplimiento, registro de eventos y explicaciones
 ├── results_cert_v2/            # resultados reales de CERT r4.2
+├── results_complementarios/    # ablación, pruebas pareadas, bootstrap, curvas PR y tabla de V de Aiken
 ├── historico_rba/              # iteraciones v1 a v4 con el dataset RBA y CERT v1 (bitácora)
 ├── docs/figuras/               # figuras del informe de avance
 └── data/                       # instrucciones para obtener los datos (los datos no se versionan)
@@ -75,6 +78,7 @@ pip install -r requirements.txt
 # SuspiciousLogin: experimento principal y verificación de requisitos
 python run_suspiciouslogin.py --data data/suspicious_logins_public_v1.csv
 python run_requisitos_sl.py   --data data/suspicious_logins_public_v1.csv
+python run_analisis_complementario.py --data data/suspicious_logins_public_v1.csv
 
 # CERT r4.2: carpeta con logon.csv, LDAP/ y answers/
 python run_cert_v2.py --dir data/CERT_r4.2
@@ -92,9 +96,12 @@ En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los dat
 |---|---|---|---|---|---|---|
 | Reglas estáticas | 0.549 | 0.090 | 0.009 | 0.250 | 0.004 | 0.11 % |
 | Isolation Forest | 0.630 | 0.109 | 0.044 | 0.051 | 0.038 | 5.80 % |
-| **AdaptAuth-ML** | **0.859** | **0.634** | **0.628** | **0.851** | **0.498** | **0.71 %** |
+| Supervisado sin IF (ablación) | 0.859 | 0.634 | 0.628 | 0.851 | 0.498 | 0.71 % |
+| **AdaptAuth-ML (apilado)** | **0.881** | **0.640** | **0.620** | **0.814** | **0.501** | **0.93 %** |
 
-Prueba t pareada en 14 grupos: frente a las reglas, t(13) = 33.87 con p < 0.001.
+- **Prueba t pareada** en 14 grupos (Shapiro-Wilk p = 0.93): frente a las reglas, t(13) = 37.67, p < 0.001.
+- **Bootstrap por usuario** (1 000 réplicas): diferencia de F1 frente a las reglas de 0.612 (IC 95 %: 0.562 a 0.656).
+- **Ablación:** frente al supervisado sin IF, t(13) = −2.10, p = 0.056; el aporte principal proviene del componente supervisado.
 
 **CERT r4.2** (5 grupos de empleados, 115 días maliciosos)
 
@@ -102,22 +109,25 @@ Prueba t pareada en 14 grupos: frente a las reglas, t(13) = 33.87 con p < 0.001.
 |---|---|---|---|---|---|
 | Reglas estáticas | 0.899 | 0.003 | 0.006 | 0.391 | 4.20 % |
 | Isolation Forest | 0.944 | 0.007 | 0.008 | 0.287 | 2.46 % |
-| Supervisado sin IF | 0.963 | 0.268 | 0.366 | 0.626 | 0.06 % |
+| Supervisado sin IF (ablación) | 0.963 | 0.268 | 0.365 | 0.626 | 0.06 % |
 | **AdaptAuth-ML (apilado)** | **0.947** | **0.256** | **0.378** | **0.617** | **0.06 %** |
 
 - **Prueba t pareada** en 10 grupos, frente a las reglas: t(9) = 7.27, p < 0.001, dz = 2.30.
+- **Ablación:** frente al supervisado sin IF, t(9) = 0.85, p = 0.416.
 - **Presupuesto de alertas:** con FPR de 0.11 %, el modelo detecta el 70 % de los días maliciosos.
 
 **Requisitos no funcionales** (`results_requisitos_sl/matriz_cumplimiento_requisitos.csv`)
 
 | Requisito | Resultado |
 |---|---|
-| Tiempo de respuesta p99 | 19.3 ms |
-| Score medio de legítimos | 0.024 |
-| Reentrenamiento de 500 000 eventos | 0.66 min |
-| Alertas explicadas | 922 de 922 |
-| Contingencia OTP | 100 % |
-| F1 del modelo reentrenado frente al estático | 0.667 frente a 0.663 |
+| RNF-04 inferencia (p50 / p95 / p99) | 10.6 / 14.9 / 16.5 ms |
+| RNF-05 respuesta C1 a C4 (p50 / p95 / p99), misma corrida | 16.4 / 23.9 / 26.5 ms |
+| RNF-07 score medio de legítimos | 0.025 |
+| RNF-08 reentrenamiento de 500 000 eventos | 0.63 min |
+| RNF-10 alertas explicadas | 970 de 970 |
+| RNF-12 identificadores directos en registros | 0 |
+| RNF-06 contingencia OTP | 100 % |
+| CA-C6-02 F1 reentrenado frente al estático | 0.676 frente a 0.650 |
 
 ## Prevención de fuga de información
 
