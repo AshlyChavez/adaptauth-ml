@@ -1,10 +1,22 @@
 {
+  "modelo": {
+    "nombre": "AdaptAuth-ML apilado",
+    "theta1": 0.18,
+    "theta2": 0.28,
+    "s_ref": 0.4261460030585362,
+    "theta1_f1": 0.6203376521397723,
+    "theta1_precision": 0.8144329896907216,
+    "theta1_recall": 0.5009511731135067,
+    "theta1_fpr": 0.00933852140077821,
+    "theta2_f1": 0.6290654590366406,
+    "theta2_fpr": 0.004565499351491569
+  },
   "RNF07_score_medio_legitimos": {
     "meta": "< 0.30",
-    "media": 0.023767294143905368,
-    "mediana": 0.00787657692445313,
-    "p95": 0.07970267945986824,
-    "media_sospechosos": 0.47918895890134855,
+    "media": 0.02510474178948462,
+    "mediana": 0.009026120229434345,
+    "p95": 0.08334096359288272,
+    "media_sospechosos": 0.47869206675011156,
     "cumple": true
   },
   "RF07_registro": {
@@ -12,9 +24,9 @@
     "registrados": 20852,
     "cumple": true,
     "decisiones": {
-      "acceso_directo": 19930,
-      "bloqueo": 855,
-      "otp": 67
+      "acceso_directo": 19882,
+      "bloqueo": 852,
+      "otp": 118
     }
   },
   "P1_contingencia": {
@@ -23,109 +35,78 @@
     "porcentaje_otp": 100.0,
     "cumple": true
   },
-  "RNF04_respuesta_C1_C4_ms": {
-    "meta": "<= 200 ms",
-    "p50": 12.034690000000126,
-    "p95": 17.32276239999706,
-    "p99": 19.275050990000572,
-    "cumple": true
+  "latencias": {
+    "n_eventos": 1000,
+    "nota": "misma corrida, mismo proceso y mismos eventos para RNF-04 y RNF-05",
+    "C1_ms": {
+      "media": 6.026554197999758,
+      "p50": 5.711403500015422,
+      "p95": 9.057046700081626,
+      "p99": 10.637869070027364
+    },
+    "RNF04_inferencia_C2a_C3_ms": {
+      "media": 10.92567350299885,
+      "p50": 10.56539649999877,
+      "p95": 14.92222984993532,
+      "p99": 16.476485990040146
+    },
+    "C4_ms": {
+      "media": 0.01244336599847884,
+      "p50": 0.011781000011978904,
+      "p95": 0.018136499920728962,
+      "p99": 0.025707499967211323
+    },
+    "RNF05_total_C1_C4_ms": {
+      "media": 16.964671066997084,
+      "p50": 16.380093500004023,
+      "p95": 23.8999529500461,
+      "p99": 26.532679999977518
+    }
   },
   "RNF10_explicabilidad": {
-    "alertas": 922,
-    "con_top3": 922,
-    "ms_por_explicacion": 1.7911507548806844,
+    "alertas": 970,
+    "con_top3": 970,
+    "ms_por_explicacion": 1.0007511876287982,
     "variables_mas_frecuentes": {
-      "continent_Americas": 790,
-      "ip_country_Brazil": 492,
-      "distinct_ips_30d": 413,
+      "continent_Americas": 802,
+      "distinct_ips_30d": 555,
+      "ip_country_Brazil": 491,
       "ip_country_Chile": 212,
+      "is_night_login": 156,
       "ip_country_Colombia": 155,
       "ip_country_Argentina": 152,
-      "is_night_login": 134,
       "ip_country_Mexico": 108
     },
-    "ejemplos": [
-      {
-        "record_id": 28380,
-        "score_R": 0.219,
-        "decision": "otp",
-        "etiqueta": 0,
-        "variable_1": "distinct_users_per_network_24h",
-        "variable_2": "logins_30d",
-        "variable_3": "login_type_reauth"
-      },
-      {
-        "record_id": 14024,
-        "score_R": 0.213,
-        "decision": "otp",
-        "etiqueta": 0,
-        "variable_1": "distinct_ips_30d",
-        "variable_2": "distinct_users_per_network_24h",
-        "variable_3": "ip_country_Brazil"
-      },
-      {
-        "record_id": 13921,
-        "score_R": 0.342,
-        "decision": "bloqueo",
-        "etiqueta": 0,
-        "variable_1": "distinct_ips_30d",
-        "variable_2": "distinct_users_per_network_24h",
-        "variable_3": "ip_country_Brazil"
-      },
-      {
-        "record_id": 13841,
-        "score_R": 0.379,
-        "decision": "bloqueo",
-        "etiqueta": 0,
-        "variable_1": "logins_30d",
-        "variable_2": "login_type_exchange",
-        "variable_3": "hours_since_last_login"
-      },
-      {
-        "record_id": 13928,
-        "score_R": 0.532,
-        "decision": "bloqueo",
-        "etiqueta": 1,
-        "variable_1": "distinct_ips_30d",
-        "variable_2": "distinct_users_per_network_24h",
-        "variable_3": "ip_country_Brazil"
-      }
-    ],
     "cumple": true
   },
   "C6_reentrenamiento": {
     "prueba": "junio",
     "estatico": {
-      "entrenado": "dic-mar",
-      "calibrado": "abr",
-      "f1": 0.6629213483146067,
-      "fpr": 0.00600362483008609,
+      "f1": 0.6495412844036696,
+      "fpr": 0.008495695514272768,
       "recall": 0.5355521936459909
     },
     "reentrenado": {
-      "entrenado": "dic-abr",
-      "calibrado": "may",
-      "f1": 0.6672760511882997,
-      "fpr": 0.007702763932940644,
-      "recall": 0.5521936459909228
+      "f1": 0.6761363636363636,
+      "fpr": 0.004304485727231536,
+      "recall": 0.540090771558245
     },
-    "eventos_excluidos_antienvenenamiento": 109,
-    "diferencia_f1_puntos": 0.4354702873692995,
+    "eventos_excluidos_antienvenenamiento": 107,
     "CA_C6_02_cumple": true
   },
   "RNF08_reentrenamiento_500k": {
     "meta": "<= 15 min",
-    "segundos": 39.63235822899999,
-    "minutos": 0.6605393038166665,
-    "cumple": true,
-    "nota": "500 000 eventos remuestreados del entrenamiento"
+    "minutos": 0.6313094513999999,
+    "cumple": true
+  },
+  "RNF12_privacidad": {
+    "coincidencias_email_ip": 0,
+    "columnas_sensibles_en_dataset": [],
+    "identificador": "actor_pseudo_id / record_id (seudónimos)",
+    "cumple": true
   },
   "referencia": {
-    "f1_theta1": 0.6282513005202081,
-    "precision": 0.851409978308026,
-    "recall": 0.49778059606848446,
-    "fpr": 0.007107652399481194,
-    "seg_entrenamiento_base": 3.2087566280000033,
+    "seg_entrenamiento_base": 2.253524844000026,
     "filas_entrenamiento": 35969
   }
 }
