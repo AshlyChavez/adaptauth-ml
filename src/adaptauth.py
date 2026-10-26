@@ -71,7 +71,7 @@ class Config:
     alpha_grid: tuple = (0.3, 0.5, 0.7, 0.85, 1.0)
     theta_grid: tuple = tuple(np.round(np.arange(0.02, 0.951, 0.01), 2))
     max_fpr_theta1: float = 0.05     # RNF02 / CA-C2-02
-    max_fpr_theta2: float = 0.01     # bloqueo: tolerancia más estricta
+    max_fpr_theta2: float = 0.001    # bloqueo: FPR <= 0.1 % (v11, observación 2 de la semana 10)
     cold_start_otp: bool = True      # regla P5
     n_test_blocks: int = 10          # bloques temporales para la prueba pareada
     label: str = "anomalo"           # columna de verdad usada para calibrar

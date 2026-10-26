@@ -1,7 +1,7 @@
 """
 AdaptAuth-ML · Análisis complementarios solicitados en la revisión del parcial (SuspiciousLogin).
 
-1. Ablación: supervisado sin IF frente a AdaptAuth-ML apilado (IF como variable del clasificador).
+1. Ablación: AdaptAuth-ML v11 (supervisado, sin IF) frente al modelo apilado v10 (IF como variable del clasificador).
 2. Prueba pareada (14 grupos mes x día) con Shapiro-Wilk reportado, y bootstrap por usuario
    como prueba complementaria que no asume independencia entre grupos.
 3. Curva de la línea base: puntos de operación de las reglas estáticas para descartar mala calibración.
@@ -116,11 +116,11 @@ def main():
     Rv["iforest"], Rt["iforest"] = sp_v, sp_t
     sup = hgb().fit(Xtr, ytr)
     pv, pt = sup.predict_proba(Xv)[:, 1], sup.predict_proba(Xt)[:, 1]
-    r, decs["supervisado"] = evaluar("Supervisado sin IF", pv, pt, dv, dt, cfg); filas.append(r)
+    r, decs["supervisado"] = evaluar("AdaptAuth-ML v11 (sin IF)", pv, pt, dv, dt, cfg); filas.append(r)
     Rv["supervisado"], Rt["supervisado"] = pv, pt
     api = hgb().fit(np.column_stack([Xtr, sp_tr]), ytr)
     av, at = api.predict_proba(np.column_stack([Xv, sp_v]))[:, 1], api.predict_proba(np.column_stack([Xt, sp_t]))[:, 1]
-    r, decs["apilado"] = evaluar("AdaptAuth-ML apilado (con IF)", av, at, dv, dt, cfg); filas.append(r)
+    r, decs["apilado"] = evaluar("Apilado con IF (v10, retirado)", av, at, dv, dt, cfg); filas.append(r)
     Rv["apilado"], Rt["apilado"] = av, at
     tabla = pd.DataFrame(filas)
     tabla.to_csv(OUT / "ablacion_sl.csv", index=False)
@@ -131,9 +131,9 @@ def main():
     out["pareadas_14_grupos"] = {
         f"{b}_vs_{a}": {k: v for k, v in prueba_pareada_por_grupos(dt, decs[a], decs[b], ["month", "day_of_week"]).items()
                         if k not in ("f1_baseline", "f1_adaptauth")}
-        for a, b in (("reglas", "apilado"), ("iforest", "apilado"), ("supervisado", "apilado"), ("reglas", "supervisado"))}
+        for a, b in (("reglas", "supervisado"), ("iforest", "supervisado"), ("supervisado", "apilado"))}
     out["bootstrap_usuarios"] = {f"{b}_vs_{a}": bootstrap_usuarios(dt, decs[a], decs[b])
-                                for a, b in (("reglas", "apilado"), ("supervisado", "apilado"))}
+                                for a, b in (("reglas", "supervisado"), ("supervisado", "apilado"))}
     for k, v in out["pareadas_14_grupos"].items():
         print(f"[pareada] {k}: {v['prueba']} est={v['estadistico']:.2f} p={v['p_valor']:.3g} "
               f"Shapiro p={v['shapiro_p_diferencias']:.3f} dz={v['d_cohen_dz']}")
@@ -142,16 +142,16 @@ def main():
 
     # ---------- 3. Curva de la línea base ----------
     po_reglas = puntos_operacion(Rv["reglas"], Rt["reglas"], yv, yt)
-    po_api = puntos_operacion(Rv["apilado"], Rt["apilado"], yv, yt)
+    po_api = puntos_operacion(Rv["supervisado"], Rt["supervisado"], yv, yt)
     po_reglas.to_csv(OUT / "puntos_operacion_reglas_sl.csv", index=False)
-    po_api.to_csv(OUT / "puntos_operacion_apilado_sl.csv", index=False)
+    po_api.to_csv(OUT / "puntos_operacion_adaptauth_sl.csv", index=False)
     niveles = pd.Series(dt["c_i"]).round(2).value_counts().sort_index()
     out["linea_base"] = dict(niveles_distintos_score=int(niveles.size),
                              puntos_operacion=po_reglas.round(4).to_dict(orient="records"),
                              recall_max_con_fpr_5=float(po_reglas.loc[po_reglas.fpr_objetivo == 0.05, "recall"].iloc[0]))
     fig, ax = plt.subplots(figsize=(7.2, 4.4))
     for k, nombre, color in (("reglas", "Reglas estáticas", "#9a9890"), ("iforest", "Isolation Forest", "#eb6834"),
-                             ("supervisado", "Supervisado sin IF", "#1baf7a"), ("apilado", "AdaptAuth-ML apilado", "#2a78d6")):
+                             ("apilado", "Apilado con IF (v10)", "#1baf7a"), ("supervisado", "AdaptAuth-ML v11", "#2a78d6")):
         p, rc, _ = precision_recall_curve(yt, Rt[k])
         ax.plot(rc, p, color=color, lw=2, label=f"{nombre} (AUC-PR {average_precision_score(yt, Rt[k]):.3f})")
     ax.axhline(yt.mean(), color="#b5b4ab", ls="--", lw=1)
@@ -161,13 +161,12 @@ def main():
     ax.legend(frameon=False, fontsize=8, loc="upper right")
     fig.savefig(OUT / "curva_pr_modelos_sl.png", dpi=200, bbox_inches="tight"); plt.close(fig)
 
-    # ---------- 4. Importancia por grupo (modelo apilado) y desempeño según historial ----------
+    # ---------- 4. Importancia por grupo (AdaptAuth-ML v11) y desempeño según historial ----------
     from run_suspiciouslogin import GRUPOS as G
     grupo_de = {c: g for g, cs in G.items() for c in cs}
     grupos_cols = {c: grupo_de.get(c, "autenticacion" if c.startswith("login_type") else "red_geo") for c in cols}
-    grupos_cols["score_if"] = "score_if"
-    Xt_aug = np.column_stack([Xt, sp_t]); nombres = cols + ["score_if"]
-    base_ap = average_precision_score(yt, at)
+    Xt_aug = Xt.copy(); nombres = list(cols)
+    base_ap = average_precision_score(yt, pt)
     rng = np.random.default_rng(cfg.seed)
     imp = {}
     for g in sorted(set(grupos_cols.values())):
@@ -175,17 +174,17 @@ def main():
         caidas = []
         for _ in range(5):
             Xp = Xt_aug.copy(); perm = rng.permutation(len(Xp)); Xp[:, ii] = Xp[perm][:, ii]
-            caidas.append(base_ap - average_precision_score(yt, api.predict_proba(Xp)[:, 1]))
+            caidas.append(base_ap - average_precision_score(yt, sup.predict_proba(Xp)[:, 1]))
         imp[g] = dict(media=float(np.mean(caidas)), de=float(np.std(caidas, ddof=1)))
-    out["importancia_grupos_apilado"] = imp
-    print("[importancia apilado]", {k: round(v["media"], 4) for k, v in imp.items()})
+    out["importancia_grupos_adaptauth"] = imp
+    print("[importancia AdaptAuth-ML v11]", {k: round(v["media"], 4) for k, v in imp.items()})
     hist = dt["hours_since_last_login"].to_numpy() > 0
-    out["por_historial_apilado"] = {
+    out["por_historial_adaptauth"] = {
         "con_historial": dict(n=int(hist.sum()), positivos=int(yt[hist].sum()),
-                              **{k: aa.binary_metrics(yt[hist], (decs["apilado"][hist] >= 1).astype(int))[k] for k in ("f1", "precision", "recall")}),
+                              **{k: aa.binary_metrics(yt[hist], (decs["supervisado"][hist] >= 1).astype(int))[k] for k in ("f1", "precision", "recall")}),
         "primer_acceso": dict(n=int((~hist).sum()), positivos=int(yt[~hist].sum()),
-                              **{k: aa.binary_metrics(yt[~hist], (decs["apilado"][~hist] >= 1).astype(int))[k] for k in ("f1", "precision", "recall")})}
-    print("[historial]", out["por_historial_apilado"])
+                              **{k: aa.binary_metrics(yt[~hist], (decs["supervisado"][~hist] >= 1).astype(int))[k] for k in ("f1", "precision", "recall")})}
+    print("[historial]", out["por_historial_adaptauth"])
 
     # ---------- 6. V de Aiken ----------
     filas = []

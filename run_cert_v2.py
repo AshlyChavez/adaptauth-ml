@@ -13,8 +13,15 @@ Cambios:
   - Híbrido apilado: el score de Isolation Forest entra como variable del modelo supervisado, para
     aprovechar que IF ordena bien (AUC 0.94) aunque por sí solo no fije un buen umbral.
 
+Versión 11 (levantamiento de observaciones, semana 10):
+  - AdaptAuth-ML = clasificador supervisado sin Isolation Forest (IF se retiró del núcleo: ablación y
+    arranque en frío sin aporte). El apilado con IF se conserva solo como comparación.
+  - θ2 de bloqueo calibrado con FPR ≤ 0.1 % (Config.max_fpr_theta2).
+  - --frio: arranque en frío por empleado (fracción de empleados de entrenamiento con etiqueta).
+  - Resultados en results_cert_v11/.
+
 Uso:
-    python run_cert_v2.py --dir carpeta_con_logon_LDAP_y_answers
+    python run_cert_v2.py --dir carpeta_con_logon_LDAP_y_answers [--frio]
 """
 import argparse
 import sys
@@ -32,7 +39,10 @@ import adaptauth as aa  # noqa: E402
 import cert  # noqa: E402
 import figures  # noqa: E402
 
-OUT = Path(__file__).parent / "results_cert_v2"
+OUT = Path(__file__).parent / "results_cert_v11"
+MEJOR = "supervisado"   # AdaptAuth-ML v11, definido antes de ver la prueba
+FRIO_FRACCIONES = (0.2, 0.5)
+FRIO_SEMILLAS = (1, 2)
 F = cert.FEATURES_CERT_V2
 K = 5
 MODELOS = ("reglas_estaticas", "iforest", "supervisado", "hibrido", "hibrido_apilado")
@@ -74,12 +84,13 @@ def ajustar_fold(tr, va, te, cfg):
         Rv = aa.risk_score(sv, v["c_i"].to_numpy(), cal["alpha"])
         dec = aa.decide(R, cal["theta1"], cal["theta2"], None, False)
         out[nombre] = dict(R=R, Rv=Rv, dec=dec, cal=cal)
-    return out, m_ap
+    return out, m_sup, sp
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", required=True)
+    ap.add_argument("--frio", action="store_true")
     args = ap.parse_args()
     cfg = aa.Config(cold_start_otp=False, label="anomalo")
     OUT.mkdir(exist_ok=True); (OUT / "figuras").mkdir(exist_ok=True)
@@ -99,19 +110,20 @@ def main():
     por_fold = {m: [] for m in MODELOS}
     puntos = {f: dict(tp=0, fp=0, fn=0, tn=0) for f in FPR_OBJ}
     imp_acum = []
+    frio = []
     for k in range(K):
         kv = (k + 1) % K
         te_m, va_m = a["fold"] == k, a["fold"] == kv
         tr_m = ~(te_m | va_m)
         tr, va, te = a[tr_m].reset_index(drop=True), a[va_m].reset_index(drop=True), a[te_m].reset_index(drop=True)
-        out, m_ap = ajustar_fold(tr, va, te, cfg)
+        out, m_sup, sp = ajustar_fold(tr, va, te, cfg)
         idx = np.where(te_m.to_numpy())[0]
         y = te["anomalo"].to_numpy()
         for mname, o in out.items():
             pooled[mname]["R"][idx] = o["R"]; pooled[mname]["dec"][idx] = o["dec"]
             por_fold[mname].append(aa.binary_metrics(y, (o["dec"] >= 1).astype(int))["f1"])
-        # puntos de operación del mejor candidato (híbrido apilado): umbral por FPR objetivo en validación
-        o = out["hibrido_apilado"]; yv = va["anomalo"].to_numpy()
+        # puntos de operación de AdaptAuth-ML v11: umbral por FPR objetivo en validación
+        o = out[MEJOR]; yv = va["anomalo"].to_numpy()
         for f in FPR_OBJ:
             thr = float(np.quantile(o["Rv"][yv == 0], 1 - f))
             m = aa.binary_metrics(y, (o["R"] > thr).astype(int))
@@ -119,14 +131,29 @@ def main():
                 puntos[f][c] += m[c]
         if y.sum() > 0:
             rng = np.random.default_rng(k)
-            Fa = F + ["score_if"]
-            X = te.assign(score_if=0.0)[Fa].to_numpy(); X[:, -1] = out["iforest"]["R"]
-            base = average_precision_score(y, m_ap.predict_proba(X)[:, 1])
+            Fa = list(F)
+            X = te[Fa].to_numpy()
+            base = average_precision_score(y, m_sup.predict_proba(X)[:, 1])
             fila = {}
             for j, c in enumerate(Fa):
                 Xp = X.copy(); Xp[:, j] = rng.permutation(Xp[:, j])
-                fila[c] = base - average_precision_score(y, m_ap.predict_proba(Xp)[:, 1])
+                fila[c] = base - average_precision_score(y, m_sup.predict_proba(Xp)[:, 1])
             imp_acum.append(fila)
+        if args.frio:
+            Fa = F + ["score_if"]
+            emps = tr["user"].unique()
+            for fr in FRIO_FRACCIONES:
+                for sd in FRIO_SEMILLAS:
+                    sel = np.random.default_rng(100 * k + sd).choice(emps, size=max(1, int(fr * len(emps))), replace=False)
+                    mk = tr["user"].isin(sel).to_numpy()
+                    if tr["anomalo"].to_numpy()[mk].sum() == 0 or y.sum() == 0:
+                        continue
+                    ms = hgb().fit(tr[F].to_numpy()[mk], tr["anomalo"].to_numpy()[mk])
+                    ma = hgb().fit(tr.assign(score_if=sp["tr"])[Fa].to_numpy()[mk], tr["anomalo"].to_numpy()[mk])
+                    frio.append(dict(fold=k, fraccion=fr, semilla=sd,
+                                     auc_pr_adaptauth=float(average_precision_score(y, ms.predict_proba(te[F].to_numpy())[:, 1])),
+                                     auc_pr_apilado=float(average_precision_score(y, ma.predict_proba(te.assign(score_if=sp["te"])[Fa].to_numpy())[:, 1])),
+                                     auc_pr_iforest=float(average_precision_score(y, sp["te"]))))
         print(f"  fold {k + 1}/{K}: prueba {te['user'].nunique()} empleados, {int(y.sum())} días maliciosos | "
               + " | ".join(f"{m}: F1={por_fold[m][-1]:.2f}" for m in MODELOS))
 
@@ -156,7 +183,7 @@ def main():
                        f1=2 * P * Rr / max(P + Rr, 1e-12), alertas_falsas=c["fp"], dias_detectados=c["tp"]))
     po = pd.DataFrame(po); po.to_csv(OUT / "puntos_operacion_cert_v2.csv", index=False)
 
-    mejor = "hibrido_apilado"   # propuesta AdaptAuth-ML definida de antemano (no se elige mirando la prueba)
+    mejor = MEJOR
     pu = []
     if "functional_unit" in a.columns:
         for u, idx in a.groupby("functional_unit").indices.items():
@@ -189,23 +216,36 @@ def main():
     resultados = dict(
         dataset="CERT r4.2", unidad="usuario-día (solo sesiones)", evaluacion=f"{K} folds por empleado (estratificados)",
         volumen=dict(dias=len(a), empleados=int(a.user.nunique()), dias_maliciosos=int(y.sum())),
-        modelos=res, mejor=mejor, puntos_operacion_hibrido_apilado=po.round(5).to_dict(orient="records"),
+        modelos=res, mejor=mejor, puntos_operacion_adaptauth=po.round(5).to_dict(orient="records"),
         por_unidad=pu.round(4).to_dict(orient="records") if len(pu) else [],
         pareada_mejor_vs_reglas=pareada("reglas_estaticas", mejor),
         pareada_mejor_vs_iforest=pareada("iforest", mejor),
-        pareada_mejor_vs_supervisado=pareada("supervisado", mejor) if mejor != "supervisado" else None,
-        importancia_hibrido_apilado=imp.round(4).to_dict(),
+        pareada_apilado_vs_adaptauth=pareada(mejor, "hibrido_apilado"),
+        importancia_adaptauth=imp.round(4).to_dict(),
+        arranque_en_frio=frio,
     )
     aa.to_json(resultados, OUT / "metricas_cert_v2.json")
     figures.model_comparison(tabla, OUT / "figuras" / "comparacion_modelos_cert_v2.png")
     if len(imp):
         figures.shap_bars(imp.clip(lower=0), OUT / "figuras" / "importancia_cert_v2.png",
                           xlabel="Caída de AUC-PR al permutar la variable")
+    import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(7.5, 4.2), dpi=160)
+    ax.plot(po["fpr_prueba"] * 100, po["recall"], marker="o", color="#1F5FAE", lw=2)
+    for _, r in po.iterrows():
+        ax.annotate(f"{r.recall:.2f}", (r.fpr_prueba * 100, r.recall), textcoords="offset points", xytext=(4, -12), fontsize=8)
+    ax.axhline(0.70, ls="--", color="#E06A2E", lw=1); ax.axvline(0.10, ls="--", color="#E06A2E", lw=1)
+    ax.set_xscale("log"); ax.set_xlabel("Falsas alarmas en prueba (FPR, %)"); ax.set_ylabel("Recall de días maliciosos")
+    ax.set_title("CERT r4.2 · AdaptAuth-ML v11: detección según el presupuesto de alertas", fontsize=10)
+    ax.grid(alpha=.3); fig.tight_layout(); fig.savefig(OUT / "figuras" / "puntos_operacion_cert_v11.png"); plt.close(fig)
+    if frio:
+        fz = pd.DataFrame(frio).groupby("fraccion")[["auc_pr_adaptauth", "auc_pr_apilado", "auc_pr_iforest"]].mean()
+        fz.to_csv(OUT / "arranque_en_frio_cert.csv"); print("[arranque en frío CERT, AUC-PR medio]"); print(fz.round(4).to_string())
     print(tabla.round(4).to_string(index=False))
-    print(f"[puntos de operación, híbrido apilado]"); print(po.round(5).to_string(index=False))
+    print("[puntos de operación, AdaptAuth-ML v11]"); print(po.round(5).to_string(index=False))
     if len(pu):
         print(f"[por unidad funcional, {mejor}]"); print(pu.round(3).to_string(index=False))
-    for k in ("pareada_mejor_vs_reglas", "pareada_mejor_vs_iforest", "pareada_mejor_vs_supervisado"):
+    for k in ("pareada_mejor_vs_reglas", "pareada_mejor_vs_iforest", "pareada_apilado_vs_adaptauth"):
         if resultados[k]:
             print(f"[{k}]", {kk: (round(v, 4) if isinstance(v, float) else v) for kk, v in resultados[k].items()})
     print("[importancia top 8]", dict(list(imp.round(4).items())[:8]))

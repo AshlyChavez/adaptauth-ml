@@ -1,22 +1,22 @@
 {
   "modelo": {
-    "nombre": "AdaptAuth-ML apilado",
-    "theta1": 0.18,
-    "theta2": 0.28,
-    "s_ref": 0.4261460030585362,
-    "theta1_f1": 0.6203376521397723,
-    "theta1_precision": 0.8144329896907216,
-    "theta1_recall": 0.5009511731135067,
-    "theta1_fpr": 0.00933852140077821,
-    "theta2_f1": 0.6290654590366406,
-    "theta2_fpr": 0.004565499351491569
+    "nombre": "AdaptAuth-ML v11 (supervisado, sin IF)",
+    "theta1": 0.21,
+    "theta2": 0.56,
+    "s_ref": null,
+    "theta1_f1": 0.6282513005202081,
+    "theta1_precision": 0.851409978308026,
+    "theta1_recall": 0.49778059606848446,
+    "theta1_fpr": 0.007107652399481194,
+    "theta2_f1": 0.6093818500657606,
+    "theta2_fpr": 0.0004669260700389105
   },
   "RNF07_score_medio_legitimos": {
     "meta": "< 0.30",
-    "media": 0.02510474178948462,
-    "mediana": 0.009026120229434345,
-    "p95": 0.08334096359288272,
-    "media_sospechosos": 0.47869206675011156,
+    "media": 0.023767294143905368,
+    "mediana": 0.00787657692445313,
+    "p95": 0.07970267945986824,
+    "media_sospechosos": 0.47918895890134855,
     "cumple": true
   },
   "RF07_registro": {
@@ -24,9 +24,9 @@
     "registrados": 20852,
     "cumple": true,
     "decisiones": {
-      "acceso_directo": 19882,
-      "bloqueo": 852,
-      "otp": 118
+      "acceso_directo": 19930,
+      "bloqueo": 704,
+      "otp": 218
     }
   },
   "P1_contingencia": {
@@ -39,42 +39,42 @@
     "n_eventos": 1000,
     "nota": "misma corrida, mismo proceso y mismos eventos para RNF-04 y RNF-05",
     "C1_ms": {
-      "media": 6.026554197999758,
-      "p50": 5.711403500015422,
-      "p95": 9.057046700081626,
-      "p99": 10.637869070027364
+      "media": 7.530470162000597,
+      "p50": 7.061361000012312,
+      "p95": 10.400282299977448,
+      "p99": 11.302952739977172
     },
-    "RNF04_inferencia_C2a_C3_ms": {
-      "media": 10.92567350299885,
-      "p50": 10.56539649999877,
-      "p95": 14.92222984993532,
-      "p99": 16.476485990040146
+    "RNF04_inferencia_C2_C3_ms": {
+      "media": 2.868661949999705,
+      "p50": 2.6559625000288634,
+      "p95": 4.1803556500013865,
+      "p99": 5.179804979960067
     },
     "C4_ms": {
-      "media": 0.01244336599847884,
-      "p50": 0.011781000011978904,
-      "p95": 0.018136499920728962,
-      "p99": 0.025707499967211323
+      "media": 0.0173724259999517,
+      "p50": 0.014534999991155928,
+      "p95": 0.022750399992332856,
+      "p99": 0.04770247001374627
     },
     "RNF05_total_C1_C4_ms": {
-      "media": 16.964671066997084,
-      "p50": 16.380093500004023,
-      "p95": 23.8999529500461,
-      "p99": 26.532679999977518
+      "media": 10.416504538000254,
+      "p50": 9.749256500043657,
+      "p95": 14.421043250030152,
+      "p99": 15.588293900005963
     }
   },
   "RNF10_explicabilidad": {
-    "alertas": 970,
-    "con_top3": 970,
-    "ms_por_explicacion": 1.0007511876287982,
+    "alertas": 922,
+    "con_top3": 922,
+    "ms_por_explicacion": 2.229677905639903,
     "variables_mas_frecuentes": {
-      "continent_Americas": 802,
-      "distinct_ips_30d": 555,
-      "ip_country_Brazil": 491,
+      "continent_Americas": 771,
+      "ip_country_Brazil": 578,
+      "distinct_ips_30d": 392,
       "ip_country_Chile": 212,
-      "is_night_login": 156,
       "ip_country_Colombia": 155,
       "ip_country_Argentina": 152,
+      "is_night_login": 134,
       "ip_country_Mexico": 108
     },
     "cumple": true
@@ -82,21 +82,21 @@
   "C6_reentrenamiento": {
     "prueba": "junio",
     "estatico": {
-      "f1": 0.6495412844036696,
-      "fpr": 0.008495695514272768,
+      "f1": 0.6629213483146067,
+      "fpr": 0.00600362483008609,
       "recall": 0.5355521936459909
     },
     "reentrenado": {
-      "f1": 0.6761363636363636,
-      "fpr": 0.004304485727231536,
-      "recall": 0.540090771558245
+      "f1": 0.6606660666066606,
+      "fpr": 0.009401903035795196,
+      "recall": 0.5552193645990923
     },
-    "eventos_excluidos_antienvenenamiento": 107,
+    "eventos_excluidos_antienvenenamiento": 11,
     "CA_C6_02_cumple": true
   },
   "RNF08_reentrenamiento_500k": {
     "meta": "<= 15 min",
-    "minutos": 0.6313094513999999,
+    "minutos": 0.6321547967666665,
     "cumple": true
   },
   "RNF12_privacidad": {
@@ -106,7 +106,7 @@
     "cumple": true
   },
   "referencia": {
-    "seg_entrenamiento_base": 2.253524844000026,
+    "seg_entrenamiento_base": 2.6620387659999665,
     "filas_entrenamiento": 35969
   }
 }

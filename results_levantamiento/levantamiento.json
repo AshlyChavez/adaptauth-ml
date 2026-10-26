@@ -1,0 +1,245 @@
+{
+ "arranque_en_frio": [
+  {
+   "fraccion": 0.0,
+   "modelo": "Isolation Forest solo",
+   "auc_roc": 0.6297,
+   "auc_pr": 0.1094,
+   "auc_pr_de": NaN,
+   "positivos": 0.0
+  },
+  {
+   "fraccion": 0.005,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.7107,
+   "auc_pr": 0.3733,
+   "auc_pr_de": 0.1754,
+   "positivos": 10.0
+  },
+  {
+   "fraccion": 0.005,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.7155,
+   "auc_pr": 0.3754,
+   "auc_pr_de": 0.1281,
+   "positivos": 10.0
+  },
+  {
+   "fraccion": 0.01,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.7416,
+   "auc_pr": 0.4545,
+   "auc_pr_de": 0.0674,
+   "positivos": 15.6
+  },
+  {
+   "fraccion": 0.01,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.7525,
+   "auc_pr": 0.4542,
+   "auc_pr_de": 0.0787,
+   "positivos": 15.6
+  },
+  {
+   "fraccion": 0.02,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.7831,
+   "auc_pr": 0.5404,
+   "auc_pr_de": 0.0709,
+   "positivos": 46.6
+  },
+  {
+   "fraccion": 0.02,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.7881,
+   "auc_pr": 0.5338,
+   "auc_pr_de": 0.0701,
+   "positivos": 46.6
+  },
+  {
+   "fraccion": 0.05,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.8133,
+   "auc_pr": 0.5353,
+   "auc_pr_de": 0.0941,
+   "positivos": 159.0
+  },
+  {
+   "fraccion": 0.05,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.8163,
+   "auc_pr": 0.5417,
+   "auc_pr_de": 0.0704,
+   "positivos": 159.0
+  },
+  {
+   "fraccion": 0.1,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.8023,
+   "auc_pr": 0.5524,
+   "auc_pr_de": 0.0463,
+   "positivos": 312.8
+  },
+  {
+   "fraccion": 0.1,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.8052,
+   "auc_pr": 0.5568,
+   "auc_pr_de": 0.0354,
+   "positivos": 312.8
+  },
+  {
+   "fraccion": 0.25,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.8123,
+   "auc_pr": 0.5988,
+   "auc_pr_de": 0.0153,
+   "positivos": 754.0
+  },
+  {
+   "fraccion": 0.25,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.8161,
+   "auc_pr": 0.5983,
+   "auc_pr_de": 0.0191,
+   "positivos": 754.0
+  },
+  {
+   "fraccion": 1.0,
+   "modelo": "AdaptAuth-ML v11 (sin IF)",
+   "auc_roc": 0.8403,
+   "auc_pr": 0.6261,
+   "auc_pr_de": NaN,
+   "positivos": 2935.0
+  },
+  {
+   "fraccion": 1.0,
+   "modelo": "Apilado con IF (v10)",
+   "auc_roc": 0.8414,
+   "auc_pr": 0.6226,
+   "auc_pr_de": NaN,
+   "positivos": 2935.0
+  }
+ ],
+ "diferencias_apilado_menos_supervisado": [
+  {
+   "fraccion": 0.005,
+   "dif_auc_pr_media": 0.0021,
+   "dif_min": -0.0588,
+   "dif_max": 0.074,
+   "semillas_a_favor_apilado": 2
+  },
+  {
+   "fraccion": 0.01,
+   "dif_auc_pr_media": -0.0003,
+   "dif_min": -0.1235,
+   "dif_max": 0.043,
+   "semillas_a_favor_apilado": 3
+  },
+  {
+   "fraccion": 0.02,
+   "dif_auc_pr_media": -0.0066,
+   "dif_min": -0.0281,
+   "dif_max": 0.0128,
+   "semillas_a_favor_apilado": 2
+  },
+  {
+   "fraccion": 0.05,
+   "dif_auc_pr_media": 0.0065,
+   "dif_min": -0.0135,
+   "dif_max": 0.0497,
+   "semillas_a_favor_apilado": 1
+  },
+  {
+   "fraccion": 0.1,
+   "dif_auc_pr_media": 0.0043,
+   "dif_min": -0.0045,
+   "dif_max": 0.0245,
+   "semillas_a_favor_apilado": 3
+  },
+  {
+   "fraccion": 0.25,
+   "dif_auc_pr_media": -0.0004,
+   "dif_min": -0.0074,
+   "dif_max": 0.0061,
+   "semillas_a_favor_apilado": 3
+  },
+  {
+   "fraccion": 1.0,
+   "dif_auc_pr_media": -0.0035,
+   "dif_min": -0.0035,
+   "dif_max": -0.0035,
+   "semillas_a_favor_apilado": 0
+  }
+ ],
+ "recalibracion_theta2": [
+  {
+   "regla_theta2": "FPR de bloqueo ≤ 1 % (v10)",
+   "theta1": 0.21,
+   "theta2": 0.27,
+   "acceso_legitimos": 19138,
+   "acceso_anomalos": 792,
+   "otp_legitimos": 52,
+   "otp_anomalos": 15,
+   "bloqueo_legitimos": 85,
+   "bloqueo_anomalos": 770,
+   "f1_theta1": 0.6283,
+   "fpr_theta1": 0.0071,
+   "precision_bloqueo": 0.9006,
+   "recall_bloqueo": 0.4883,
+   "f1_theta2": 0.6332,
+   "fpr_bloqueo": 0.0044
+  },
+  {
+   "regla_theta2": "FPR de bloqueo ≤ 0.5 %",
+   "theta1": 0.21,
+   "theta2": 0.4,
+   "acceso_legitimos": 19138,
+   "acceso_anomalos": 792,
+   "otp_legitimos": 102,
+   "otp_anomalos": 64,
+   "bloqueo_legitimos": 35,
+   "bloqueo_anomalos": 721,
+   "f1_theta1": 0.6283,
+   "fpr_theta1": 0.0071,
+   "precision_bloqueo": 0.9537,
+   "recall_bloqueo": 0.4572,
+   "f1_theta2": 0.6181,
+   "fpr_bloqueo": 0.0018
+  },
+  {
+   "regla_theta2": "FPR de bloqueo ≤ 0.1 % (v11)",
+   "theta1": 0.21,
+   "theta2": 0.56,
+   "acceso_legitimos": 19138,
+   "acceso_anomalos": 792,
+   "otp_legitimos": 128,
+   "otp_anomalos": 90,
+   "bloqueo_legitimos": 9,
+   "bloqueo_anomalos": 695,
+   "f1_theta1": 0.6283,
+   "fpr_theta1": 0.0071,
+   "precision_bloqueo": 0.9872,
+   "recall_bloqueo": 0.4407,
+   "f1_theta2": 0.6094,
+   "fpr_bloqueo": 0.0005
+  },
+  {
+   "regla_theta2": "Precisión de bloqueo ≥ 0.95",
+   "theta1": 0.21,
+   "theta2": 0.54,
+   "acceso_legitimos": 19138,
+   "acceso_anomalos": 792,
+   "otp_legitimos": 127,
+   "otp_anomalos": 88,
+   "bloqueo_legitimos": 10,
+   "bloqueo_anomalos": 697,
+   "f1_theta1": 0.6283,
+   "fpr_theta1": 0.0071,
+   "precision_bloqueo": 0.9859,
+   "recall_bloqueo": 0.442,
+   "f1_theta2": 0.6103,
+   "fpr_bloqueo": 0.0005
+  }
+ ]
+}

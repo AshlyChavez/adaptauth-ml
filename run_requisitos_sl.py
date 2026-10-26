@@ -1,5 +1,5 @@
 """
-AdaptAuth-ML · Verificación de requisitos no funcionales sobre SuspiciousLogin (modelo apilado, datos reales).
+AdaptAuth-ML · Verificación de requisitos no funcionales sobre SuspiciousLogin (modelo AdaptAuth-ML v11, datos reales).
 
 Códigos alineados con el catálogo de la tesis:
   RNF-01 F1 >= 0.60 · RNF-03 FPR <= 5 % y bloqueo <= 1 % · RNF-04 inferencia p99 <= 100 ms
@@ -25,7 +25,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 import adaptauth as aa  # noqa: E402
-from modelo_apilado import ModeloApilado  # noqa: E402
+from modelo_adaptauth import ModeloAdaptAuth  # noqa: E402
 from run_suspiciouslogin import CATEGORICAS, GRUPOS, preparar  # noqa: E402
 
 OUT = Path(__file__).parent / "results_requisitos_sl"
@@ -57,18 +57,18 @@ def main():
     M = lambda *ms: np.isin(mes, ms)
     res = {}
 
-    # ---------- Modelo apilado (entrena dic-mar, calibra abr, prueba may-jun) ----------
+    # ---------- AdaptAuth-ML (entrena dic-mar, calibra abr, prueba may-jun) ----------
     tr, va, te = M(0, 1, 2, 3), M(4), M(5, 6)
     dtr, dv, dt = (d[m].reset_index(drop=True) for m in (tr, va, te))
     Xtr, Xv, Xt = X[tr].to_numpy(), X[va].to_numpy(), X[te].to_numpy()
-    t0 = time.perf_counter(); mod = ModeloApilado().fit(Xtr, dtr.anomalo.to_numpy(), Xv, dv.anomalo.to_numpy())
+    t0 = time.perf_counter(); mod = ModeloAdaptAuth().fit(Xtr, dtr.anomalo.to_numpy(), Xv, dv.anomalo.to_numpy())
     t_fit = time.perf_counter() - t0
     p_v, p_t = mod.predict_proba(Xv)[:, 1], mod.predict_proba(Xt)[:, 1]
     cal = calibrar(p_v, dv, cfg)
     dec, m = evaluar(p_t, dt, cal)
     y = dt.anomalo.to_numpy()
     m2 = aa.binary_metrics(y, (dec == 2).astype(int))
-    res["modelo"] = dict(nombre="AdaptAuth-ML apilado", theta1=cal["theta1"], theta2=cal["theta2"], s_ref=mod.s_ref,
+    res["modelo"] = dict(nombre="AdaptAuth-ML v11 (supervisado, sin IF)", theta1=cal["theta1"], theta2=cal["theta2"], s_ref=mod.s_ref,
                          theta1_f1=m["f1"], theta1_precision=m["precision"], theta1_recall=m["recall"], theta1_fpr=m["fpr"],
                          theta2_f1=m2["f1"], theta2_fpr=m2["fpr"])
 
@@ -119,16 +119,16 @@ def main():
         t3 = time.perf_counter()
         t_c1.append((t1 - t0) * 1e3); t_inf.append((t2 - t1) * 1e3); t_c4.append((t3 - t2) * 1e3); t_tot.append((t3 - t0) * 1e3)
     res["latencias"] = dict(n_eventos=1000, nota="misma corrida, mismo proceso y mismos eventos para RNF-04 y RNF-05",
-                            C1_ms=resumen(t_c1), RNF04_inferencia_C2a_C3_ms=resumen(t_inf), C4_ms=resumen(t_c4),
+                            C1_ms=resumen(t_c1), RNF04_inferencia_C2_C3_ms=resumen(t_inf), C4_ms=resumen(t_c4),
                             RNF05_total_C1_C4_ms=resumen(t_tot))
-    lat4, lat5 = res["latencias"]["RNF04_inferencia_C2a_C3_ms"], res["latencias"]["RNF05_total_C1_C4_ms"]
+    lat4, lat5 = res["latencias"]["RNF04_inferencia_C2_C3_ms"], res["latencias"]["RNF05_total_C1_C4_ms"]
 
     # ---------- RNF-10: top-3 SHAP por alerta ----------
     import shap
     ex = shap.TreeExplainer(mod.hgb)
     idx_alerta = np.where(dec >= 1)[0]
     Xa = mod.aumentar(Xt[idx_alerta])
-    nombres = cols + ["score_if"]
+    nombres = list(cols)
     t0 = time.perf_counter(); sv = np.array(ex.shap_values(Xa)); t_shap = (time.perf_counter() - t0) * 1000 / max(len(Xa), 1)
     if sv.ndim == 3:
         sv = sv[..., 1] if sv.shape[-1] == 2 else sv[1]
@@ -153,7 +153,7 @@ def main():
     excluir = (np.isin(mes[trB], [4])) & (p_trB > cal["theta2"]) & (dB.anomalo.to_numpy() == 0)
     keep = ~excluir
     dvB = d[vaB].reset_index(drop=True)
-    mod_B = ModeloApilado().fit(X[trB].to_numpy()[keep], dB.anomalo.to_numpy()[keep], X[vaB].to_numpy(), dvB.anomalo.to_numpy())
+    mod_B = ModeloAdaptAuth().fit(X[trB].to_numpy()[keep], dB.anomalo.to_numpy()[keep], X[vaB].to_numpy(), dvB.anomalo.to_numpy())
     cal_B = calibrar(mod_B.predict_proba(X[vaB].to_numpy())[:, 1], dvB, cfg)
     _, m_reent = evaluar(mod_B.predict_proba(Xj)[:, 1], dj, cal_B)
     res["C6_reentrenamiento"] = dict(
@@ -166,7 +166,7 @@ def main():
     rng = np.random.default_rng(0)
     idx500 = rng.integers(0, int(tr.sum()), 500_000)
     t0 = time.perf_counter()
-    ModeloApilado().fit(Xtr[idx500], dtr.anomalo.to_numpy()[idx500], Xv, dv.anomalo.to_numpy())
+    ModeloAdaptAuth().fit(Xtr[idx500], dtr.anomalo.to_numpy()[idx500], Xv, dv.anomalo.to_numpy())
     t500 = time.perf_counter() - t0
     res["RNF08_reentrenamiento_500k"] = dict(meta="<= 15 min", minutos=float(t500 / 60), cumple=bool(t500 <= 900))
 
@@ -187,8 +187,8 @@ def main():
 
     filas = [
         ("RNF-01", "Efectividad en identidad y red", "F1 >= 0.60", f"{m['f1']:.3f}", m["f1"] >= 0.60),
-        ("RNF-03", "Falsas alarmas", "FPR <= 5 %; bloqueo <= 1 %", f"{m['fpr']:.2%}; {m2['fpr']:.2%}", m["fpr"] <= 0.05 and m2["fpr"] <= 0.01),
-        ("RNF-04", "Inferencia C2a a C3 (p99)", "<= 100 ms", f"{lat4['p99']:.1f} ms (p50 {lat4['p50']:.1f}; p95 {lat4['p95']:.1f})", lat4["p99"] <= 100),
+        ("RNF-03", "Falsas alarmas", "FPR <= 5 %; bloqueo <= 0.1 %", f"{m['fpr']:.2%}; {m2['fpr']:.2%}", m["fpr"] <= 0.05 and m2["fpr"] <= 0.001),
+        ("RNF-04", "Inferencia C2 a C3 (p99)", "<= 100 ms", f"{lat4['p99']:.1f} ms (p50 {lat4['p50']:.1f}; p95 {lat4['p95']:.1f})", lat4["p99"] <= 100),
         ("RNF-05", "Respuesta C1 a C4 (p99)", "<= 200 ms", f"{lat5['p99']:.1f} ms (p50 {lat5['p50']:.1f}; p95 {lat5['p95']:.1f})", lat5["p99"] <= 200),
         ("RNF-06", "Contingencia P1 (CA-C4-02)", "OTP en 100 % de fallos", f"{res['P1_contingencia']['porcentaje_otp']:.0f} %", res["P1_contingencia"]["cumple"]),
         ("RNF-07", "Media de R en legítimos", "< 0.30", f"{res['RNF07_score_medio_legitimos']['media']:.3f}", res["RNF07_score_medio_legitimos"]["cumple"]),

@@ -1,13 +1,13 @@
 codigo,requisito,meta,resultado,cumple
-RNF-01,Efectividad en identidad y red,F1 >= 0.60,0.620,True
-RNF-03,Falsas alarmas,FPR <= 5 %; bloqueo <= 1 %,0.93%; 0.46%,True
-RNF-04,Inferencia C2a a C3 (p99),<= 100 ms,16.5 ms (p50 10.6; p95 14.9),True
-RNF-05,Respuesta C1 a C4 (p99),<= 200 ms,26.5 ms (p50 16.4; p95 23.9),True
+RNF-01,Efectividad en identidad y red,F1 >= 0.60,0.628,True
+RNF-03,Falsas alarmas,FPR <= 5 %; bloqueo <= 0.1 %,0.71%; 0.05%,True
+RNF-04,Inferencia C2 a C3 (p99),<= 100 ms,5.2 ms (p50 2.7; p95 4.2),True
+RNF-05,Respuesta C1 a C4 (p99),<= 200 ms,15.6 ms (p50 9.7; p95 14.4),True
 RNF-06,Contingencia P1 (CA-C4-02),OTP en 100 % de fallos,100 %,True
-RNF-07,Media de R en legítimos,< 0.30,0.025,True
+RNF-07,Media de R en legítimos,< 0.30,0.024,True
 RNF-08,Reentrenamiento 500 000 eventos,<= 15 min,0.63 min,True
 RNF-09,Partición sin fuga,Temporal; variables causales,Temporal dic-mar/abr/may-jun; 3 variables excluidas,True
-RNF-10,Top-3 variables por alerta,100 % de alertas,970 de 970 (1.00 ms c/u),True
+RNF-10,Top-3 variables por alerta,100 % de alertas,922 de 922 (2.23 ms c/u),True
 RNF-12,Sin identificadores directos,0 coincidencias,0 coincidencias de correo o IP,True
 RF-07,Registro de eventos,100 %,20852 de 20852,True
-CA-C6-02,Reentrenado sin perder > 0.02 de F1,>= F1 estático - 0.02,0.676 frente a 0.650,True
+CA-C6-02,Reentrenado sin perder > 0.02 de F1,>= F1 estático - 0.02,0.661 frente a 0.663,True
