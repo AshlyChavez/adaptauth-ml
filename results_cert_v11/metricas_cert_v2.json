@@ -1,0 +1,542 @@
+{
+  "dataset": "CERT r4.2",
+  "unidad": "usuario-día (solo sesiones)",
+  "evaluacion": "5 folds por empleado (estratificados)",
+  "volumen": {
+    "dias": 330452,
+    "empleados": 1000,
+    "dias_maliciosos": 115
+  },
+  "modelos": {
+    "reglas_estaticas": {
+      "analisis_theta1": {
+        "tp": 45,
+        "fp": 13883,
+        "fn": 70,
+        "tn": 316454,
+        "precision": 0.0032309017805858702,
+        "recall": 0.391304347826087,
+        "f1": 0.00640888698995941,
+        "fpr": 0.042026778713858876,
+        "fnr": 0.6086956521739131,
+        "mcc": 0.03242280052553201
+      },
+      "analisis_theta2": {
+        "tp": 0,
+        "fp": 119,
+        "fn": 115,
+        "tn": 330218,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0003602381810090907,
+        "fnr": 1.0,
+        "mcc": -0.0003541341508956861
+      },
+      "auc_roc": 0.8989518082390434,
+      "auc_pr": 0.002773516225932266,
+      "f1_por_fold": [
+        0.007182500816193275,
+        0.005970149253731344,
+        0.003931203931203931,
+        0.0073377665673010775,
+        0.006216006216006217
+      ],
+      "f1_media_folds": 0.006127525356887169,
+      "f1_de_folds": 0.0013632755510453911,
+      "recall_dias_cualquier_actividad_maliciosa": 0.07505070993914807
+    },
+    "iforest": {
+      "analisis_theta1": {
+        "tp": 33,
+        "fp": 8120,
+        "fn": 82,
+        "tn": 322217,
+        "precision": 0.004047589844229118,
+        "recall": 0.28695652173913044,
+        "f1": 0.007982583454281567,
+        "fpr": 0.024580958233561483,
+        "fnr": 0.7130434782608696,
+        "mcc": 0.03154733768365286
+      },
+      "analisis_theta2": {
+        "tp": 2,
+        "fp": 272,
+        "fn": 113,
+        "tn": 330065,
+        "precision": 0.0072992700729927005,
+        "recall": 0.017391304347826087,
+        "f1": 0.010282776349614395,
+        "fpr": 0.0008234015565922073,
+        "fnr": 0.9826086956521739,
+        "mcc": 0.010736079541538851
+      },
+      "auc_roc": 0.9435277097130452,
+      "auc_pr": 0.006973965740873299,
+      "f1_por_fold": [
+        0.0,
+        0.0,
+        0.0,
+        0.006591702210158977,
+        0.011072664359861591
+      ],
+      "f1_media_folds": 0.0035328733140041133,
+      "f1_de_folds": 0.005090394503119375,
+      "recall_dias_cualquier_actividad_maliciosa": 0.033468559837728194
+    },
+    "supervisado": {
+      "analisis_theta1": {
+        "tp": 72,
+        "fp": 207,
+        "fn": 43,
+        "tn": 330130,
+        "precision": 0.25806451612903225,
+        "recall": 0.6260869565217392,
+        "f1": 0.36548223350253806,
+        "fpr": 0.0006266328022595108,
+        "fnr": 0.3739130434782609,
+        "mcc": 0.4016561453857066
+      },
+      "analisis_theta2": {
+        "tp": 63,
+        "fp": 141,
+        "fn": 52,
+        "tn": 330196,
+        "precision": 0.3088235294117647,
+        "recall": 0.5478260869565217,
+        "f1": 0.3949843260188088,
+        "fpr": 0.0004268368363216957,
+        "fnr": 0.45217391304347826,
+        "mcc": 0.411051792773844
+      },
+      "auc_roc": 0.9628812789468884,
+      "auc_pr": 0.26821856340942535,
+      "f1_por_fold": [
+        0.3010752688172043,
+        0.4761904761904762,
+        0.5070422535211268,
+        0.1875,
+        0.4507042253521127
+      ],
+      "f1_media_folds": 0.384502444776184,
+      "f1_de_folds": 0.1356239585393956,
+      "recall_dias_cualquier_actividad_maliciosa": 0.07302231237322515
+    },
+    "hibrido": {
+      "analisis_theta1": {
+        "tp": 66,
+        "fp": 166,
+        "fn": 49,
+        "tn": 330171,
+        "precision": 0.28448275862068967,
+        "recall": 0.5739130434782609,
+        "f1": 0.3804034582132565,
+        "fpr": 0.0005025171264496559,
+        "fnr": 0.4260869565217391,
+        "mcc": 0.40378251857604486
+      },
+      "analisis_theta2": {
+        "tp": 61,
+        "fp": 140,
+        "fn": 54,
+        "tn": 330197,
+        "precision": 0.3034825870646766,
+        "recall": 0.5304347826086957,
+        "f1": 0.38607594936708856,
+        "fpr": 0.00042380962471657733,
+        "fnr": 0.46956521739130436,
+        "mcc": 0.4009519149499805
+      },
+      "auc_roc": 0.9731700472942586,
+      "auc_pr": 0.26230678643539457,
+      "f1_por_fold": [
+        0.2222222222222222,
+        0.4761904761904762,
+        0.6666666666666666,
+        0.20689655172413793,
+        0.4507042253521127
+      ],
+      "f1_media_folds": 0.40453602843112313,
+      "f1_de_folds": 0.1925344258047078,
+      "recall_dias_cualquier_actividad_maliciosa": 0.06693711967545639
+    },
+    "hibrido_apilado": {
+      "analisis_theta1": {
+        "tp": 71,
+        "fp": 190,
+        "fn": 44,
+        "tn": 330147,
+        "precision": 0.2720306513409962,
+        "recall": 0.6173913043478261,
+        "f1": 0.3776595744680851,
+        "fpr": 0.0005751702049724978,
+        "fnr": 0.3826086956521739,
+        "mcc": 0.40952496889752904
+      },
+      "analisis_theta2": {
+        "tp": 61,
+        "fp": 124,
+        "fn": 54,
+        "tn": 330213,
+        "precision": 0.32972972972972975,
+        "recall": 0.5304347826086957,
+        "f1": 0.40666666666666673,
+        "fpr": 0.00037537423903468277,
+        "fnr": 0.46956521739130436,
+        "mcc": 0.41795894366517716
+      },
+      "auc_roc": 0.9470583992552533,
+      "auc_pr": 0.255603968308863,
+      "f1_por_fold": [
+        0.25,
+        0.5970149253731343,
+        0.6071428571428571,
+        0.1875,
+        0.40579710144927533
+      ],
+      "f1_media_folds": 0.40949097679305335,
+      "f1_de_folds": 0.19297830659679702,
+      "recall_dias_cualquier_actividad_maliciosa": 0.0720081135902637
+    }
+  },
+  "mejor": "supervisado",
+  "puntos_operacion_adaptauth": [
+    {
+      "fpr_objetivo": 0.0002,
+      "fpr_prueba": 0.00013,
+      "recall": 0.15652,
+      "precision": 0.3,
+      "f1": 0.20571,
+      "alertas_falsas": 42,
+      "dias_detectados": 18
+    },
+    {
+      "fpr_objetivo": 0.0005,
+      "fpr_prueba": 0.00049,
+      "recall": 0.44348,
+      "precision": 0.23944,
+      "f1": 0.31098,
+      "alertas_falsas": 162,
+      "dias_detectados": 51
+    },
+    {
+      "fpr_objetivo": 0.001,
+      "fpr_prueba": 0.001,
+      "recall": 0.70435,
+      "precision": 0.19708,
+      "f1": 0.30798,
+      "alertas_falsas": 330,
+      "dias_detectados": 81
+    },
+    {
+      "fpr_objetivo": 0.002,
+      "fpr_prueba": 0.00215,
+      "recall": 0.7913,
+      "precision": 0.11361,
+      "f1": 0.19869,
+      "alertas_falsas": 710,
+      "dias_detectados": 91
+    },
+    {
+      "fpr_objetivo": 0.005,
+      "fpr_prueba": 0.00521,
+      "recall": 0.84348,
+      "precision": 0.05336,
+      "f1": 0.10036,
+      "alertas_falsas": 1721,
+      "dias_detectados": 97
+    },
+    {
+      "fpr_objetivo": 0.01,
+      "fpr_prueba": 0.01033,
+      "recall": 0.86087,
+      "precision": 0.0282,
+      "f1": 0.05461,
+      "alertas_falsas": 3412,
+      "dias_detectados": 99
+    }
+  ],
+  "por_unidad": [
+    {
+      "unidad": "1 - Adminstration",
+      "empleados": 97,
+      "dias": 31349,
+      "dias_maliciosos": 43,
+      "f1": 0.2558,
+      "precision": 0.1705,
+      "recall": 0.5116,
+      "fpr": 0.0034
+    },
+    {
+      "unidad": "2 - ResearchAndEngineering",
+      "empleados": 333,
+      "dias": 110207,
+      "dias_maliciosos": 24,
+      "f1": 0.5,
+      "precision": 0.3571,
+      "recall": 0.8333,
+      "fpr": 0.0003
+    },
+    {
+      "unidad": "3 - Manufacturing",
+      "empleados": 216,
+      "dias": 71741,
+      "dias_maliciosos": 21,
+      "f1": 0.3333,
+      "precision": 0.2444,
+      "recall": 0.5238,
+      "fpr": 0.0005
+    },
+    {
+      "unidad": "4 - Finance",
+      "empleados": 14,
+      "dias": 4875,
+      "dias_maliciosos": 0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "fpr": 0.0
+    },
+    {
+      "unidad": "5 - SalesAndMarketing",
+      "empleados": 320,
+      "dias": 105351,
+      "dias_maliciosos": 27,
+      "f1": 0.5,
+      "precision": 0.3878,
+      "recall": 0.7037,
+      "fpr": 0.0003
+    },
+    {
+      "unidad": "6 - PurchasingAndContracts",
+      "empleados": 18,
+      "dias": 6237,
+      "dias_maliciosos": 0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "fpr": 0.0
+    }
+  ],
+  "pareada_mejor_vs_reglas": {
+    "n_grupos": 10,
+    "prueba": "t de Student pareada",
+    "media_A": 0.0068133473568843415,
+    "media_B": 0.355212376691176,
+    "shapiro_p": 0.20410513429032673,
+    "estadistico": 6.7389021521591435,
+    "p_valor": 8.47078159087537e-05,
+    "d_cohen_dz": 2.1310279729833472
+  },
+  "pareada_mejor_vs_iforest": {
+    "n_grupos": 10,
+    "prueba": "t de Student pareada",
+    "media_A": 0.007548860716937769,
+    "media_B": 0.355212376691176,
+    "shapiro_p": 0.21708745423444387,
+    "estadistico": 6.725620568197064,
+    "p_valor": 8.599439374880894e-05,
+    "d_cohen_dz": 2.1268279673578534
+  },
+  "pareada_apilado_vs_adaptauth": {
+    "n_grupos": 10,
+    "prueba": "t de Student pareada",
+    "media_A": 0.355212376691176,
+    "media_B": 0.37959510006262687,
+    "shapiro_p": 0.5277525223503265,
+    "estadistico": 0.8526356424490693,
+    "p_valor": 0.41597427793126995,
+    "d_cohen_dz": 0.26962706443800055
+  },
+  "importancia_adaptauth": {
+    "z_jornada_horas": 0.254,
+    "frac_prev_dias_fuera_horario": 0.163,
+    "log_dias_historial": 0.1165,
+    "frac_pc_de_otro": 0.0511,
+    "n_eventos": 0.0307,
+    "desbalance_logon_logoff": 0.0232,
+    "frac_prev_dias_fin_de_semana": 0.019,
+    "z_n_pc_nuevo": 0.0127,
+    "dia_semana": 0.0112,
+    "z_primera_hora": 0.0111,
+    "n_fuera_horario": 0.004,
+    "ultima_hora": 0.0025,
+    "z_n_fuera_horario": 0.0005,
+    "jornada_horas": 0.0001,
+    "frac_fuera_horario": 0.0001,
+    "n_pc_de_otro": 0.0,
+    "fin_de_semana": 0.0,
+    "dias_desde_ultimo": -0.0001,
+    "n_pc_nuevo": -0.0002,
+    "z_n_pc_de_otro": -0.0003,
+    "n_pcs": -0.0008,
+    "z_n_pcs": -0.0014,
+    "frac_prev_dias_pc_de_otro": -0.0015,
+    "primera_hora": -0.002,
+    "n_logons": -0.0047,
+    "z_ultima_hora": -0.0073,
+    "z_n_logons": -0.0262
+  },
+  "arranque_en_frio": [
+    {
+      "fold": 0,
+      "fraccion": 0.2,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.013817971912163066,
+      "auc_pr_apilado": 0.013817971912163066,
+      "auc_pr_iforest": 0.0024188341779561888
+    },
+    {
+      "fold": 0,
+      "fraccion": 0.2,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.022683504294759006,
+      "auc_pr_apilado": 0.022683504294759006,
+      "auc_pr_iforest": 0.0024188341779561888
+    },
+    {
+      "fold": 0,
+      "fraccion": 0.5,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.3128307602514294,
+      "auc_pr_apilado": 0.31740516258165136,
+      "auc_pr_iforest": 0.0024188341779561888
+    },
+    {
+      "fold": 0,
+      "fraccion": 0.5,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.2339837638994722,
+      "auc_pr_apilado": 0.09290678850341028,
+      "auc_pr_iforest": 0.0024188341779561888
+    },
+    {
+      "fold": 1,
+      "fraccion": 0.2,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.336489016772793,
+      "auc_pr_apilado": 0.10260474222471035,
+      "auc_pr_iforest": 0.0069034586623929915
+    },
+    {
+      "fold": 1,
+      "fraccion": 0.2,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.059035872749497745,
+      "auc_pr_apilado": 0.09352461446517996,
+      "auc_pr_iforest": 0.0069034586623929915
+    },
+    {
+      "fold": 1,
+      "fraccion": 0.5,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.20768416107881665,
+      "auc_pr_apilado": 0.34783031031983197,
+      "auc_pr_iforest": 0.0069034586623929915
+    },
+    {
+      "fold": 1,
+      "fraccion": 0.5,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.36050883171667153,
+      "auc_pr_apilado": 0.4519764825185826,
+      "auc_pr_iforest": 0.0069034586623929915
+    },
+    {
+      "fold": 2,
+      "fraccion": 0.2,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.3636854216988071,
+      "auc_pr_apilado": 0.4306102202169534,
+      "auc_pr_iforest": 0.0047745010536491325
+    },
+    {
+      "fold": 2,
+      "fraccion": 0.2,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.08088120729923974,
+      "auc_pr_apilado": 0.08225111545790594,
+      "auc_pr_iforest": 0.0047745010536491325
+    },
+    {
+      "fold": 2,
+      "fraccion": 0.5,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.2011362923299724,
+      "auc_pr_apilado": 0.2011362923299724,
+      "auc_pr_iforest": 0.0047745010536491325
+    },
+    {
+      "fold": 2,
+      "fraccion": 0.5,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.4894810261868673,
+      "auc_pr_apilado": 0.4752540401857485,
+      "auc_pr_iforest": 0.0047745010536491325
+    },
+    {
+      "fold": 3,
+      "fraccion": 0.2,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.012478587216415319,
+      "auc_pr_apilado": 0.005859755414749899,
+      "auc_pr_iforest": 0.0232559696925848
+    },
+    {
+      "fold": 3,
+      "fraccion": 0.2,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.04791683427804544,
+      "auc_pr_apilado": 0.09872165310466136,
+      "auc_pr_iforest": 0.0232559696925848
+    },
+    {
+      "fold": 3,
+      "fraccion": 0.5,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.07552321950849837,
+      "auc_pr_apilado": 0.07677347157544735,
+      "auc_pr_iforest": 0.0232559696925848
+    },
+    {
+      "fold": 3,
+      "fraccion": 0.5,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.15103154037157632,
+      "auc_pr_apilado": 0.19698861744720608,
+      "auc_pr_iforest": 0.0232559696925848
+    },
+    {
+      "fold": 4,
+      "fraccion": 0.2,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.04368147123728597,
+      "auc_pr_apilado": 0.04368147123728597,
+      "auc_pr_iforest": 0.003690323398602007
+    },
+    {
+      "fold": 4,
+      "fraccion": 0.2,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.15089179742934752,
+      "auc_pr_apilado": 0.15089179742934752,
+      "auc_pr_iforest": 0.003690323398602007
+    },
+    {
+      "fold": 4,
+      "fraccion": 0.5,
+      "semilla": 1,
+      "auc_pr_adaptauth": 0.06072633647461772,
+      "auc_pr_apilado": 0.043117194257387664,
+      "auc_pr_iforest": 0.003690323398602007
+    },
+    {
+      "fold": 4,
+      "fraccion": 0.5,
+      "semilla": 2,
+      "auc_pr_adaptauth": 0.05792548946780353,
+      "auc_pr_apilado": 0.037528337740639094,
+      "auc_pr_iforest": 0.003690323398602007
+    }
+  ]
+}
