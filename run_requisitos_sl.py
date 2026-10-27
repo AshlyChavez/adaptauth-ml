@@ -193,7 +193,7 @@ def main():
         ("RNF-06", "Contingencia P1 (CA-C4-02)", "OTP en 100 % de fallos", f"{res['P1_contingencia']['porcentaje_otp']:.0f} %", res["P1_contingencia"]["cumple"]),
         ("RNF-07", "Media de R en legítimos", "< 0.30", f"{res['RNF07_score_medio_legitimos']['media']:.3f}", res["RNF07_score_medio_legitimos"]["cumple"]),
         ("RNF-08", "Reentrenamiento 500 000 eventos", "<= 15 min", f"{t500 / 60:.2f} min", t500 <= 900),
-        ("RNF-09", "Partición sin fuga", "Temporal; variables causales", "Temporal dic-mar/abr/may-jun; 3 variables excluidas", True),
+        ("RNF-09", "Partición sin fuga", "Temporal; variables solo con eventos previos", "Temporal dic-mar/abr/may-jun; 3 variables excluidas", True),
         ("RNF-10", "Top-3 variables por alerta", "100 % de alertas", f"{len(expl)} de {len(expl)} ({t_shap:.2f} ms c/u)", res["RNF10_explicabilidad"]["cumple"]),
         ("RNF-12", "Sin identificadores directos", "0 coincidencias", f"{hallazgos} coincidencias de correo o IP", res["RNF12_privacidad"]["cumple"]),
         ("RF-07", "Registro de eventos", "100 %", f"{len(registro)} de {len(dt)}", res["RF07_registro"]["cumple"]),

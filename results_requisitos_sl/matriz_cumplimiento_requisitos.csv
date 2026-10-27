@@ -6,7 +6,7 @@ RNF-05,Respuesta C1 a C4 (p99),<= 200 ms,15.6 ms (p50 9.7; p95 14.4),True
 RNF-06,Contingencia P1 (CA-C4-02),OTP en 100 % de fallos,100 %,True
 RNF-07,Media de R en legítimos,< 0.30,0.024,True
 RNF-08,Reentrenamiento 500 000 eventos,<= 15 min,0.63 min,True
-RNF-09,Partición sin fuga,Temporal; variables causales,Temporal dic-mar/abr/may-jun; 3 variables excluidas,True
+RNF-09,Partición sin fuga,Temporal; variables solo con eventos previos,Temporal dic-mar/abr/may-jun; 3 variables excluidas,True
 RNF-10,Top-3 variables por alerta,100 % de alertas,922 de 922 (2.23 ms c/u),True
 RNF-12,Sin identificadores directos,0 coincidencias,0 coincidencias de correo o IP,True
 RF-07,Registro de eventos,100 %,20852 de 20852,True

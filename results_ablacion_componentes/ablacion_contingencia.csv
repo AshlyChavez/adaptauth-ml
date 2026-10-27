@@ -1,0 +1,4 @@
+esquema,legitimos_otp,legitimos_bloqueados,legitimos_con_friccion,sospechosos_sin_verificacion,sospechosos_otp,sospechosos_bloqueados,pct_legitimos_bloqueados,pct_sospechosos_detenidos
+P1: OTP ante fallo (v11),19275,0,19275,0,1577,0,0.0,100.0
+Sin contingencia: dejar pasar (fail-open),0,0,0,1577,0,0,0.0,0.0
+Sin contingencia: bloquear (fail-closed),0,19275,19275,0,0,1577,100.0,100.0

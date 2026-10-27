@@ -19,7 +19,7 @@ Cuando un usuario ya validó su contraseña, AdaptAuth-ML hace tres cosas:
 
 | Componente | Función | Implementación |
 |---|---|---|
-| C1. Ingesta y variables | Variables causales de hora, red, ubicación, dispositivo e historial | `src/adaptauth.py`, `src/cert.py` |
+| C1. Ingesta y variables | Variables de hora, red, ubicación, dispositivo e historial, calculadas solo con eventos previos (sin fuga temporal) | `src/adaptauth.py`, `src/cert.py` |
 | C2. Motor de detección | Clasificador supervisado sobre el vector de variables | HistGradientBoostingClassifier (`src/modelo_adaptauth.py`) |
 | C3. Score de riesgo | R = P(ataque \| x) | `predict_proba` del clasificador |
 | C4. Decisión adaptativa | Umbrales θ1 y θ2 calibrados en validación; reglas P1 a P3 | `calibrate`, `decide` en `src/adaptauth.py` |
@@ -52,6 +52,7 @@ adaptauth-ml/
 ├── run_requisitos_sl.py        # verificación de requisitos no funcionales
 ├── run_analisis_complementario.py  # ablación con IF, pruebas pareadas, bootstrap por usuario, V de Aiken
 ├── run_levantamiento.py        # arranque en frío y recalibración de θ2
+├── run_ablacion_componentes.py # ablación del modelo integral: niveles de decisión, contingencia, reentrenamiento protegido
 ├── run_cert_v2.py              # CERT r4.2 con validación cruzada por empleado (--frio: arranque en frío)
 ├── notebooks/                  # cuadernos de Google Colab
 │   └── historico/              # versiones previas (dataset RBA)
@@ -61,6 +62,7 @@ adaptauth-ml/
 ├── results_cert_v2/            # resultados de CERT r4.2, versión 10 (histórico)
 ├── results_complementarios/    # ablación, pruebas pareadas, bootstrap, curvas PR y tabla de V de Aiken
 ├── results_levantamiento/      # arranque en frío y recalibración de θ2 en SuspiciousLogin
+├── results_ablacion_componentes/  # ablación de componentes del modelo integral
 ├── historico_rba/              # iteraciones v1 a v4 con el dataset RBA y CERT v1 (bitácora)
 ├── docs/figuras/               # figuras del informe de avance
 └── data/                       # instrucciones para obtener los datos (los datos no se versionan)
@@ -85,6 +87,7 @@ python run_suspiciouslogin.py --data data/suspicious_logins_public_v1.csv
 python run_requisitos_sl.py   --data data/suspicious_logins_public_v1.csv
 python run_analisis_complementario.py --data data/suspicious_logins_public_v1.csv
 python run_levantamiento.py --data data/suspicious_logins_public_v1.csv
+python run_ablacion_componentes.py --data data/suspicious_logins_public_v1.csv
 
 # CERT r4.2: carpeta con logon.csv, LDAP/ y answers/
 python run_cert_v2.py --dir data/CERT_r4.2 --frio
@@ -132,11 +135,26 @@ En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los dat
 | RNF-04 inferencia (p50 / p95 / p99) | 2.7 / 4.2 / 5.2 ms |
 | RNF-05 respuesta C1 a C4 (p50 / p95 / p99), misma corrida | 9.7 / 14.4 / 15.6 ms |
 | RNF-07 score medio de legítimos | 0.024 |
-| RNF-08 reentrenamiento de 500 000 eventos | 0.63 min |
+| RNF-08 reentrenamiento de 500 000 eventos (prueba de carga: remuestreo con reposición del entrenamiento) | 0.63 min |
 | RNF-10 alertas explicadas | 922 de 922 |
 | RNF-12 identificadores directos en registros | 0 |
 | RNF-06 contingencia OTP | 100 % |
-| CA-C6-02 F1 reentrenado frente al estático | 0.661 frente a 0.663 |
+| CA-C6-02 F1 reentrenado frente al estático (un ciclo simulado; prueba solo en junio) | 0.661 frente a 0.663 |
+
+Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno por uno: RNF-04 mide solo la inferencia (C2 y C3) y RNF-05 la respuesta completa de C1 a C4, que incluye construir el vector de variables.
+
+**Ablación de componentes** (`results_ablacion_componentes/`, prueba de SuspiciousLogin, mismo clasificador)
+
+| Esquema de decisión | Legítimos bloqueados | Legítimos con OTP | Sospechosos sin verificación |
+|---|---|---|---|
+| Tres niveles (v11) | 9 | 128 | 792 |
+| Dos niveles: acceso o bloqueo con θ1 | 137 | 0 | 792 |
+| Dos niveles: acceso o bloqueo con θ2 | 9 | 0 | 882 |
+| OTP universal | 0 | 19 275 | 0 |
+
+- **Contingencia:** ante una caída del motor, sin la regla P1 hay que elegir entre dejar pasar a los 1 577 sospechosos o bloquear a los 19 275 legítimos.
+- **Reentrenamiento protegido:** en un ciclo no muestra beneficio (F1 0.672 frente a 0.680 sin protección); con bloqueos sin confirmar acumulados limita la caída (0.353 frente a 0.109), pero los bloqueos deben confirmarse para conservar la señal de ataque.
+- **CERT r4.2:** la unidad es el día-empleado y las variables usan la actividad del día completo; ese escenario demuestra detección diaria con historial, no la decisión en el inicio de sesión.
 
 ## Prevención de fuga de información
 

@@ -1,0 +1,154 @@
+{
+  "info": {
+    "theta1": 0.21,
+    "theta2": 0.56,
+    "eventos_prueba": 20852,
+    "sospechosos_prueba": 1577,
+    "bloqueos_abril_no_confirmados": 345,
+    "de_ellos_sospechosos": 334,
+    "bloqueos_ventana_completa": 1941,
+    "de_ellos_sospechosos_ventana": 1899
+  },
+  "estructura": [
+    {
+      "esquema": "Tres niveles: acceso, OTP y bloqueo (v11)",
+      "legitimos_otp": 128,
+      "legitimos_bloqueados": 9,
+      "legitimos_con_friccion": 137,
+      "sospechosos_sin_verificacion": 792,
+      "sospechosos_otp": 90,
+      "sospechosos_bloqueados": 695,
+      "pct_legitimos_bloqueados": 0.04669260700389105,
+      "pct_sospechosos_detenidos": 49.778059606848444
+    },
+    {
+      "esquema": "Dos niveles: acceso y bloqueo con θ1",
+      "legitimos_otp": 0,
+      "legitimos_bloqueados": 137,
+      "legitimos_con_friccion": 137,
+      "sospechosos_sin_verificacion": 792,
+      "sospechosos_otp": 0,
+      "sospechosos_bloqueados": 785,
+      "pct_legitimos_bloqueados": 0.7107652399481194,
+      "pct_sospechosos_detenidos": 49.778059606848444
+    },
+    {
+      "esquema": "Dos niveles: acceso y bloqueo con θ2",
+      "legitimos_otp": 0,
+      "legitimos_bloqueados": 9,
+      "legitimos_con_friccion": 9,
+      "sospechosos_sin_verificacion": 882,
+      "sospechosos_otp": 0,
+      "sospechosos_bloqueados": 695,
+      "pct_legitimos_bloqueados": 0.04669260700389105,
+      "pct_sospechosos_detenidos": 44.0710209258085
+    },
+    {
+      "esquema": "Dos niveles: acceso y OTP con θ1 (sin bloqueo)",
+      "legitimos_otp": 137,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 137,
+      "sospechosos_sin_verificacion": 792,
+      "sospechosos_otp": 785,
+      "sospechosos_bloqueados": 0,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 49.778059606848444
+    },
+    {
+      "esquema": "OTP universal (MFA estática)",
+      "legitimos_otp": 19275,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 19275,
+      "sospechosos_sin_verificacion": 0,
+      "sospechosos_otp": 1577,
+      "sospechosos_bloqueados": 0,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 100.0
+    }
+  ],
+  "contingencia": [
+    {
+      "esquema": "P1: OTP ante fallo (v11)",
+      "legitimos_otp": 19275,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 19275,
+      "sospechosos_sin_verificacion": 0,
+      "sospechosos_otp": 1577,
+      "sospechosos_bloqueados": 0,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 100.0
+    },
+    {
+      "esquema": "Sin contingencia: dejar pasar (fail-open)",
+      "legitimos_otp": 0,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 0,
+      "sospechosos_sin_verificacion": 1577,
+      "sospechosos_otp": 0,
+      "sospechosos_bloqueados": 0,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 0.0
+    },
+    {
+      "esquema": "Sin contingencia: bloquear (fail-closed)",
+      "legitimos_otp": 0,
+      "legitimos_bloqueados": 19275,
+      "legitimos_con_friccion": 19275,
+      "sospechosos_sin_verificacion": 0,
+      "sospechosos_otp": 0,
+      "sospechosos_bloqueados": 1577,
+      "pct_legitimos_bloqueados": 100.0,
+      "pct_sospechosos_detenidos": 100.0
+    }
+  ],
+  "reentrenamiento": [
+    {
+      "variante": "Modelo sin reentrenar (referencia)",
+      "eventos_entrenamiento": 35969,
+      "f1": 0.6629213483146067,
+      "precision": 0.8697788697788698,
+      "recall": 0.5355521936459909,
+      "fpr": 0.00600362483008609
+    },
+    {
+      "variante": "Sin protección: bloqueos no confirmados etiquetados como legítimos",
+      "eventos_entrenamiento": 48063,
+      "f1": 0.6797752808988764,
+      "precision": 0.8918918918918919,
+      "recall": 0.5491679273827534,
+      "fpr": 0.004984141368373357
+    },
+    {
+      "variante": "Con protección (v11): bloqueos no confirmados excluidos",
+      "eventos_entrenamiento": 47718,
+      "f1": 0.6716279069767442,
+      "precision": 0.8719806763285024,
+      "recall": 0.546142208774584,
+      "fpr": 0.00600362483008609
+    },
+    {
+      "variante": "Acumulado sin protección: ningún bloqueo de dic-abr confirmado, etiquetados como legítimos",
+      "eventos_entrenamiento": 48063,
+      "f1": 0.10942956926658906,
+      "precision": 0.23737373737373738,
+      "recall": 0.07110438729198185,
+      "fpr": 0.01710466696873584
+    },
+    {
+      "variante": "Acumulado con protección: ningún bloqueo de dic-abr confirmado, excluidos",
+      "eventos_entrenamiento": 46122,
+      "f1": 0.35294117647058826,
+      "precision": 0.4867021276595745,
+      "recall": 0.27685325264750377,
+      "fpr": 0.021862256456728592
+    },
+    {
+      "variante": "Etiquetas completas (cota superior, no disponible en operación)",
+      "eventos_entrenamiento": 48063,
+      "f1": 0.6773283160865476,
+      "precision": 0.8955223880597015,
+      "recall": 0.5446293494704992,
+      "fpr": 0.00475758948799275
+    }
+  ]
+}
