@@ -88,6 +88,7 @@ python run_requisitos_sl.py   --data data/suspicious_logins_public_v1.csv
 python run_analisis_complementario.py --data data/suspicious_logins_public_v1.csv
 python run_levantamiento.py --data data/suspicious_logins_public_v1.csv
 python run_ablacion_componentes.py --data data/suspicious_logins_public_v1.csv
+python run_validacion_pi13.py --data data/suspicious_logins_public_v1.csv
 
 # CERT r4.2: carpeta con logon.csv, LDAP/ y answers/
 python run_cert_v2.py --dir data/CERT_r4.2 --frio
@@ -155,6 +156,21 @@ Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno 
 - **Contingencia:** ante una caída del motor, sin la regla P1 hay que elegir entre dejar pasar a los 1 577 sospechosos o bloquear a los 19 275 legítimos.
 - **Reentrenamiento protegido:** en un ciclo no muestra beneficio (F1 0.672 frente a 0.680 sin protección); con bloqueos sin confirmar acumulados limita la caída (0.353 frente a 0.109), pero los bloqueos deben confirmarse para conservar la señal de ataque.
 - **CERT r4.2:** la unidad es el día-empleado y las variables usan la actividad del día completo; ese escenario demuestra detección diaria con historial, no la decisión en el inicio de sesión.
+
+## Validación (PI 13)
+
+La corrida de validación usa el tag `v11-validacion`, las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
+
+| Comparación en SuspiciousLogin (prueba, 20 852 eventos) | Reglas con umbral para el mismo FPR de validación | AdaptAuth-ML v11 |
+|---|---|---|
+| Recall | 0.022 | 0.498 |
+| FPR | 1.39 % | 0.71 % |
+| F1 | 0.036 | 0.628 |
+
+- **Prueba principal:** bootstrap por usuario (2 000 réplicas, 12 765 usuarios) de la diferencia de recall: +0.478 (IC 95 %: 0.422 a 0.536). McNemar exacto sobre los 1 577 sospechosos: 767 detectados solo por AdaptAuth-ML frente a 16 solo por las reglas (p < 0.001).
+- **Cinco semillas:** F1 0.629 ± 0.003; legítimos bloqueados 6.6 ± 2.3.
+- **Curva recall-FPR** (`results_validacion_pi13/o6_recall_fpr_sl.csv`): con el umbral para FPR ≤ 5 % el recall sube a 0.566, pero la precisión baja a 0.53.
+- **CERT r4.2:** `run_cert_v2.py` calcula además la diferencia de AUC y de recall con FPR ≤ 0.1 % frente a las reglas, con IC 95 % por bootstrap de empleados (`results_cert_v11/validacion_pi13_cert.json`).
 
 ## Prevención de fuga de información
 

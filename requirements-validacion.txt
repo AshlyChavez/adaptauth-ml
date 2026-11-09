@@ -1,0 +1,8 @@
+# Versiones exactas de la corrida de validación del PI 13 (la versión 11 se construyó con scikit-learn 1.8;
+# con 1.9 cambian levemente los umbrales calibrados, ver incidencia INC01 del PI 13)
+numpy==2.4.6
+pandas==3.0.5
+scipy==1.18.1
+scikit-learn==1.8.0
+matplotlib==3.11.2
+shap==0.54.1

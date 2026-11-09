@@ -25,6 +25,7 @@ Uso:
 """
 import argparse
 import sys
+import json
 import time
 from pathlib import Path
 
@@ -40,6 +41,7 @@ import cert  # noqa: E402
 import figures  # noqa: E402
 
 OUT = Path(__file__).parent / "results_cert_v11"
+N_BOOT_CERT = 1000
 MEJOR = "supervisado"   # AdaptAuth-ML v11, definido antes de ver la prueba
 FRIO_FRACCIONES = (0.2, 0.5)
 FRIO_SEMILLAS = (1, 2)
@@ -111,6 +113,9 @@ def main():
     puntos = {f: dict(tp=0, fp=0, fn=0, tn=0) for f in FPR_OBJ}
     imp_acum = []
     frio = []
+    # PI 13: decisiones con presupuesto FPR <= 0.1 % (umbral fijado en validación) para AdaptAuth-ML y reglas
+    pred01 = {MEJOR: np.zeros(len(a), dtype=int), "reglas_estaticas": np.zeros(len(a), dtype=int)}
+    pos_fold = []
     for k in range(K):
         kv = (k + 1) % K
         te_m, va_m = a["fold"] == k, a["fold"] == kv
@@ -122,6 +127,14 @@ def main():
         for mname, o in out.items():
             pooled[mname]["R"][idx] = o["R"]; pooled[mname]["dec"][idx] = o["dec"]
             por_fold[mname].append(aa.binary_metrics(y, (o["dec"] >= 1).astype(int))["f1"])
+        pos_fold.append(dict(fold=k + 1, dias=int(len(y)), dias_maliciosos=int(y.sum()),
+                             empleados=int(te["user"].nunique()), empleados_con_maliciosos=int(te.loc[te.anomalo == 1, "user"].nunique())))
+        yv_ = va["anomalo"].to_numpy(); jit = np.random.default_rng(42 + k)
+        for mname in pred01:
+            rv, rt = out[mname]["Rv"], out[mname]["R"]
+            if mname == "reglas_estaticas":   # puntaje discreto: desempate aleatorio fijo
+                rv = rv + jit.uniform(0, 1e-6, len(rv)); rt = rt + jit.uniform(0, 1e-6, len(rt))
+            pred01[mname][idx] = (rt > float(np.quantile(rv[yv_ == 0], 0.999))).astype(int)
         # puntos de operación de AdaptAuth-ML v11: umbral por FPR objetivo en validación
         o = out[MEJOR]; yv = va["anomalo"].to_numpy()
         for f in FPR_OBJ:
@@ -213,6 +226,36 @@ def main():
                     p_valor=float(t.pvalue), d_cohen_dz=float(d.mean() / d.std(ddof=1)) if d.std(ddof=1) > 0 else None)
 
     imp = pd.DataFrame(imp_acum).mean().sort_values(ascending=False) if imp_acum else pd.Series(dtype=float)
+
+    # ---------- PI 13 (O2, O3): prueba principal por bootstrap de empleados ----------
+    emp, inv = np.unique(a["user"].to_numpy(), return_inverse=True)
+    pr_m, pr_r = pred01[MEJOR], pred01["reglas_estaticas"]
+    sm = lambda v: np.bincount(inv, weights=v.astype(float), minlength=len(emp))
+    pos_e, tpm_e, tpr_e = sm(y == 1), sm((pr_m == 1) & (y == 1)), sm((pr_r == 1) & (y == 1))
+    neg_e, fpm_e, fpr_e = sm(y == 0), sm((pr_m == 1) & (y == 0)), sm((pr_r == 1) & (y == 0))
+    rng_b = np.random.default_rng(42); d_auc, d_rec = [], []
+    for _ in range(N_BOOT_CERT):
+        w = np.bincount(rng_b.integers(0, len(emp), len(emp)), minlength=len(emp)).astype(float)
+        if w @ pos_e == 0:
+            continue
+        sw = w[inv]
+        d_auc.append(roc_auc_score(y, pooled[MEJOR]["R"], sample_weight=sw) - roc_auc_score(y, pooled["reglas_estaticas"]["R"], sample_weight=sw))
+        d_rec.append((w @ tpm_e - w @ tpr_e) / (w @ pos_e))
+    ic = lambda v: [float(np.quantile(v, 0.025)), float(np.quantile(v, 0.975))]
+    pm, pr = aa.binary_metrics(y, pr_m), aa.binary_metrics(y, pr_r)
+    b = int(((pr_m == 1) & (pr_r == 0) & (y == 1)).sum()); c_ = int(((pr_r == 1) & (pr_m == 0) & (y == 1)).sum())
+    validacion_pi13 = dict(
+        positivos_por_fold=pos_fold, empleados_con_maliciosos=int((pos_e > 0).sum()), replicas=len(d_auc),
+        auc_roc=dict(adaptauth=res[MEJOR]["auc_roc"], reglas=res["reglas_estaticas"]["auc_roc"],
+                     diferencia=float(res[MEJOR]["auc_roc"] - res["reglas_estaticas"]["auc_roc"]), ic95_bootstrap_empleado=ic(d_auc)),
+        presupuesto_fpr_0_1=dict(adaptauth=dict(recall=pm["recall"], precision=pm["precision"], fpr=pm["fpr"], tp=pm["tp"], fp=pm["fp"]),
+                                 reglas=dict(recall=pr["recall"], precision=pr["precision"], fpr=pr["fpr"], tp=pr["tp"], fp=pr["fp"]),
+                                 diferencia_recall=float(pm["recall"] - pr["recall"]), ic95_bootstrap_empleado=ic(d_rec),
+                                 p_bilateral_bootstrap=float(min(1.0, 2 * min((np.array(d_rec) <= 0).mean(), (np.array(d_rec) >= 0).mean())))),
+        mcnemar_dias_maliciosos=dict(solo_adaptauth=b, solo_reglas=c_, p_exacto=float(stats.binomtest(b, b + c_, 0.5).pvalue) if b + c_ else 1.0),
+    )
+    aa.to_json(validacion_pi13, OUT / "validacion_pi13_cert.json")
+    print("[PI 13]", json.dumps(validacion_pi13, indent=1, default=str))
     resultados = dict(
         dataset="CERT r4.2", unidad="usuario-día (solo sesiones)", evaluacion=f"{K} folds por empleado (estratificados)",
         volumen=dict(dias=len(a), empleados=int(a.user.nunique()), dias_maliciosos=int(y.sum())),
