@@ -1,0 +1,77 @@
+{
+  "positivos_por_fold": [
+    {
+      "fold": 1,
+      "dias": 67075,
+      "dias_maliciosos": 21,
+      "empleados": 201,
+      "empleados_con_maliciosos": 9
+    },
+    {
+      "fold": 2,
+      "dias": 65718,
+      "dias_maliciosos": 24,
+      "empleados": 201,
+      "empleados_con_maliciosos": 9
+    },
+    {
+      "fold": 3,
+      "dias": 66574,
+      "dias_maliciosos": 22,
+      "empleados": 200,
+      "empleados_con_maliciosos": 8
+    },
+    {
+      "fold": 4,
+      "dias": 64966,
+      "dias_maliciosos": 21,
+      "empleados": 199,
+      "empleados_con_maliciosos": 8
+    },
+    {
+      "fold": 5,
+      "dias": 66119,
+      "dias_maliciosos": 27,
+      "empleados": 199,
+      "empleados_con_maliciosos": 8
+    }
+  ],
+  "empleados_con_maliciosos": 42,
+  "replicas": 1000,
+  "auc_roc": {
+    "adaptauth": 0.9628812789468884,
+    "reglas": 0.8989518082390434,
+    "diferencia": 0.06392947070784494,
+    "ic95_bootstrap_empleado": [
+      0.007698342995907831,
+      0.11677206119773308
+    ]
+  },
+  "presupuesto_fpr_0_1": {
+    "adaptauth": {
+      "recall": 0.7043478260869566,
+      "precision": 0.19708029197080293,
+      "fpr": 0.0009989798296890751,
+      "tp": 81,
+      "fp": 330
+    },
+    "reglas": {
+      "recall": 0.0,
+      "precision": 0.0,
+      "fpr": 0.0012441839697036662,
+      "tp": 0,
+      "fp": 411
+    },
+    "diferencia_recall": 0.7043478260869566,
+    "ic95_bootstrap_empleado": [
+      0.5743920972644377,
+      0.820005617977528
+    ],
+    "p_bilateral_bootstrap": 0.0
+  },
+  "mcnemar_dias_maliciosos": {
+    "solo_adaptauth": 81,
+    "solo_reglas": 0,
+    "p_exacto": 8.271806125530277e-25
+  }
+}
