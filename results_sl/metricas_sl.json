@@ -1,6 +1,6 @@
 {
   "dataset": "SuspiciousLogin (Google Workspace, 2 instituciones)",
-  "archivo": "/tmp/claude-0/-home-claude/d28a6e16-7b4c-55d6-b418-c55bdbcb1982/scratchpad/t/data/suspicious_logins_public_v1.csv",
+  "archivo": "/tmp/claude-0/-home-claude/d28a6e16-7b4c-55d6-b418-c55bdbcb1982/scratchpad/sl/src/repo_publico/data/suspicious_logins_public_v1.csv",
   "etiqueta": "is_suspicious de Google Workspace (no es ataque confirmado)",
   "variables_excluidas_por_fuga": [
     "login_challenge_method",
@@ -348,7 +348,7 @@
     "media_adaptauth": 0.6353675472136487,
     "de_baseline": 0.010715287809618475,
     "de_adaptauth": 0.0706365454152638,
-    "shapiro_p_diferencias": 0.40231914141164404,
+    "shapiro_p_diferencias": 0.4023191431795891,
     "prueba": "t de Student pareada",
     "estadistico": 33.87235121436229,
     "p_valor": 4.566470673673046e-14,
@@ -392,7 +392,7 @@
     "media_adaptauth": 0.6353675472136487,
     "de_baseline": 0.03533065169625598,
     "de_adaptauth": 0.0706365454152638,
-    "shapiro_p_diferencias": 0.484678707970689,
+    "shapiro_p_diferencias": 0.4846787090335207,
     "prueba": "t de Student pareada",
     "estadistico": 38.02998948964632,
     "p_valor": 1.0281073371113959e-14,
@@ -423,17 +423,17 @@
   },
   "latencia_ms": {
     "iforest": {
-      "p50_ms": 13.167204500007301,
-      "p95_ms": 21.490407400006006,
-      "p99_ms": 32.88190787998019,
-      "media_ms": 14.601635346668521
+      "p50_ms": 8.118217499998082,
+      "p95_ms": 10.378765350054666,
+      "p99_ms": 11.965149730018538,
+      "media_ms": 8.3469354699965
     },
     "supervisado": {
-      "p50_ms": 2.0055884999692353,
-      "p95_ms": 3.9122394999822068,
-      "p99_ms": 5.731828489970199,
-      "media_ms": 2.3619874399969376
+      "p50_ms": 1.5418024999576119,
+      "p95_ms": 1.937566350045472,
+      "p99_ms": 2.618292779958434,
+      "media_ms": 1.606541376666352
     },
-    "hibrido_p99_aprox": 38.61373636995039
+    "hibrido_p99_aprox": 14.583442509976972
   }
 }
