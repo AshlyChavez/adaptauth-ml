@@ -159,7 +159,7 @@ Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno 
 
 ## Validación (PI 13)
 
-La corrida de validación usa el tag `v11-validacion`, las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
+La corrida de validación usa el commit congelado `5f6f3b1`, las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
 
 | Comparación en SuspiciousLogin (prueba, 20 852 eventos) | Reglas con umbral para el mismo FPR de validación | AdaptAuth-ML v11 |
 |---|---|---|
