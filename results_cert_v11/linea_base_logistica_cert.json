@@ -1,0 +1,56 @@
+{
+  "descripcion": "Regresión logística (estandarización, class_weight balanced) con las mismas variables, pliegues y presupuesto FPR ≤ 0.1 %",
+  "variables": 27,
+  "dias": 330452,
+  "dias_maliciosos": 115,
+  "resultados": {
+    "adaptauth": {
+      "auc_roc": 0.9628812789468884,
+      "auc_pr": 0.26821856340942535,
+      "recall_fpr01": 0.7043478260869566,
+      "precision_fpr01": 0.19708029197080293,
+      "fpr": 0.0009989798296890751,
+      "tp": 81,
+      "fp": 330
+    },
+    "logistica": {
+      "auc_roc": 0.9064976727981741,
+      "auc_pr": 0.14142332647029596,
+      "recall_fpr01": 0.46956521739130436,
+      "precision_fpr01": 0.1409921671018277,
+      "fpr": 0.0009959526180839567,
+      "tp": 54,
+      "fp": 329
+    }
+  },
+  "diferencias_bootstrap_empleado": {
+    "replicas": 1000,
+    "auc_roc": {
+      "valor": 0.056383606148714294,
+      "ic95": [
+        -0.005665704525272946,
+        0.12539725078265668
+      ]
+    },
+    "auc_pr": {
+      "valor": 0.1267952369391294,
+      "ic95": [
+        0.05283010872327423,
+        0.24070672157775755
+      ]
+    },
+    "recall_fpr01": {
+      "valor": 0.2347826086956522,
+      "ic95": [
+        0.12607031810571634,
+        0.3334090909090908
+      ]
+    }
+  },
+  "mcnemar_dias_maliciosos": {
+    "solo_adaptauth": 33,
+    "solo_logistica": 6,
+    "p_exacto": 1.429926123819314e-05
+  },
+  "segundos": 293
+}
