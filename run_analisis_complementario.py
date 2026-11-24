@@ -95,7 +95,7 @@ def main():
     cfg = aa.Config(cold_start_otp=False, label="anomalo")
     OUT.mkdir(exist_ok=True)
     raw = pd.read_csv(args.data)
-    d, X, _ = preparar(raw)
+    d, X, _ = preparar(raw, usuario=False)
     cols = list(X.columns)
     mes = d["month"].replace({12: 0})
     tr, va, te = (mes <= 3).to_numpy(), (mes == 4).to_numpy(), mes.isin([5, 6]).to_numpy()

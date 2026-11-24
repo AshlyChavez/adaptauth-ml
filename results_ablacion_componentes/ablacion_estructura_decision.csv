@@ -1,6 +1,7 @@
 esquema,legitimos_otp,legitimos_bloqueados,legitimos_con_friccion,sospechosos_sin_verificacion,sospechosos_otp,sospechosos_bloqueados,pct_legitimos_bloqueados,pct_sospechosos_detenidos
-"Tres niveles: acceso, OTP y bloqueo (v11)",128,9,137,792,90,695,0.04669260700389105,49.778059606848444
-Dos niveles: acceso y bloqueo con θ1,0,137,137,792,0,785,0.7107652399481194,49.778059606848444
-Dos niveles: acceso y bloqueo con θ2,0,9,9,882,0,695,0.04669260700389105,44.0710209258085
-Dos niveles: acceso y OTP con θ1 (sin bloqueo),137,0,137,792,785,0,0.0,49.778059606848444
+"Escalonado: OTP priorizado, bloqueo solo con R > θ2 y viaje imposible (v12)",117,0,117,730,847,0,0.0,53.709575142675966
+Tres niveles con bloqueo directo sobre θ2 (v11),117,0,117,730,156,691,0.0,53.709575142675966
+Dos niveles: acceso y bloqueo con θ1,0,117,117,730,0,847,0.6070038910505836,53.709575142675966
+Dos niveles: acceso y bloqueo con θ2,0,0,0,886,0,691,0.0,43.817374762206725
+Dos niveles: acceso y OTP con θ1 (sin bloqueo),117,0,117,730,847,0,0.0,53.709575142675966
 OTP universal (MFA estática),19275,0,19275,0,1577,0,0.0,100.0

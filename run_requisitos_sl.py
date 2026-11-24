@@ -1,5 +1,5 @@
 """
-AdaptAuth-ML · Verificación de requisitos no funcionales sobre SuspiciousLogin (modelo AdaptAuth-ML v11, datos reales).
+AdaptAuth-ML · Verificación de requisitos no funcionales sobre SuspiciousLogin (modelo AdaptAuth-ML v12, datos reales).
 
 Códigos alineados con el catálogo de la tesis:
   RNF-01 F1 >= 0.60 · RNF-03 FPR <= 5 % y bloqueo <= 1 % · RNF-04 inferencia p99 <= 100 ms
@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 import adaptauth as aa  # noqa: E402
 from modelo_adaptauth import ModeloAdaptAuth  # noqa: E402
-from run_suspiciouslogin import CATEGORICAS, GRUPOS, preparar  # noqa: E402
+from run_suspiciouslogin import CATEGORICAS, GRUPOS, preparar, variables_usuario  # noqa: E402
 
 OUT = Path(__file__).parent / "results_requisitos_sl"
 
@@ -36,7 +36,7 @@ def calibrar(p_val, dv, cfg):
 
 
 def evaluar(p, dt, cal):
-    dec = aa.decide(p, cal["theta1"], cal["theta2"], None, False)
+    dec = aa.decide_escalonado(p, cal["theta1"], cal["theta2"], dt["impossible_travel"].to_numpy())
     return dec, aa.binary_metrics(dt["anomalo"].to_numpy(), (dec >= 1).astype(int))
 
 
@@ -68,7 +68,7 @@ def main():
     dec, m = evaluar(p_t, dt, cal)
     y = dt.anomalo.to_numpy()
     m2 = aa.binary_metrics(y, (dec == 2).astype(int))
-    res["modelo"] = dict(nombre="AdaptAuth-ML v11 (supervisado, sin IF)", theta1=cal["theta1"], theta2=cal["theta2"], s_ref=mod.s_ref,
+    res["modelo"] = dict(nombre="AdaptAuth-ML v12 (supervisado, sin IF, con variables por usuario y OTP priorizado)", theta1=cal["theta1"], theta2=cal["theta2"], s_ref=mod.s_ref,
                          theta1_f1=m["f1"], theta1_precision=m["precision"], theta1_recall=m["recall"], theta1_fpr=m["fpr"],
                          theta2_f1=m2["f1"], theta2_fpr=m2["fpr"])
 
@@ -90,7 +90,7 @@ def main():
     def decidir_con_contingencia(fila_X, modelo_disponible):
         if not modelo_disponible:
             return 1  # P1: OTP por defecto
-        return int(aa.decide(mod.predict_proba(fila_X)[:, 1], cal["theta1"], cal["theta2"], None, False)[0])
+        return int(aa.decide_escalonado(mod.predict_proba(fila_X)[:, 1], cal["theta1"], cal["theta2"], [0])[0])
     muestra = Xt[:2000]
     dec_caido = [decidir_con_contingencia(muestra[i:i + 1], False) for i in range(len(muestra))]
     res["P1_contingencia"] = dict(eventos_simulados=len(muestra), con_otp=int(sum(v == 1 for v in dec_caido)),
@@ -102,11 +102,16 @@ def main():
     crudo = raw[te].reset_index(drop=True)
     idx = np.random.default_rng(3).choice(len(crudo), size=1000, replace=False)
 
+    # Estado por usuario (historial previo). En operación es una tabla que se consulta y actualiza en cada acceso;
+    # aquí se precalcula y C1 hace la consulta por evento.
+    hist_u = variables_usuario(d)[te].reset_index(drop=True)
+
     def c1(fila):
         f = fila.copy()
         f["historial_disponible"] = (f["hours_since_last_login"] > 0).astype(int)
         f["geo_cambio_continente"] = (f["geo_jump"] == 2).astype(int)
         v = pd.get_dummies(f[num + CATEGORICAS], columns=CATEGORICAS, dummy_na=True, dtype=float)
+        v = pd.concat([v, hist_u.loc[f.index]], axis=1)
         return v.reindex(columns=cols, fill_value=0.0).fillna(0.0).to_numpy()
 
     for i in idx[:50]:  # calentamiento
@@ -115,7 +120,7 @@ def main():
     for i in idx:
         t0 = time.perf_counter(); x = c1(crudo.iloc[[i]])
         t1 = time.perf_counter(); R = mod.predict_proba(x)[:, 1]
-        t2 = time.perf_counter(); aa.decide(R, cal["theta1"], cal["theta2"], None, False)
+        t2 = time.perf_counter(); aa.decide_escalonado(R, cal["theta1"], cal["theta2"], crudo["impossible_travel"].to_numpy()[[i]])
         t3 = time.perf_counter()
         t_c1.append((t1 - t0) * 1e3); t_inf.append((t2 - t1) * 1e3); t_c4.append((t3 - t2) * 1e3); t_tot.append((t3 - t0) * 1e3)
     res["latencias"] = dict(n_eventos=1000, nota="misma corrida, mismo proceso y mismos eventos para RNF-04 y RNF-05",

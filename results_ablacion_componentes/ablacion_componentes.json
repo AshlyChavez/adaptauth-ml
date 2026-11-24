@@ -1,58 +1,69 @@
 {
   "info": {
-    "theta1": 0.21,
-    "theta2": 0.56,
+    "theta1": 0.22,
+    "theta2": 0.95,
     "eventos_prueba": 20852,
     "sospechosos_prueba": 1577,
-    "bloqueos_abril_no_confirmados": 345,
-    "de_ellos_sospechosos": 334,
-    "bloqueos_ventana_completa": 1941,
-    "de_ellos_sospechosos_ventana": 1899
+    "bloqueos_abril_no_confirmados": 341,
+    "de_ellos_sospechosos": 330,
+    "bloqueos_ventana_completa": 1553,
+    "de_ellos_sospechosos_ventana": 1541
   },
   "estructura": [
     {
-      "esquema": "Tres niveles: acceso, OTP y bloqueo (v11)",
-      "legitimos_otp": 128,
-      "legitimos_bloqueados": 9,
-      "legitimos_con_friccion": 137,
-      "sospechosos_sin_verificacion": 792,
-      "sospechosos_otp": 90,
-      "sospechosos_bloqueados": 695,
-      "pct_legitimos_bloqueados": 0.04669260700389105,
-      "pct_sospechosos_detenidos": 49.778059606848444
+      "esquema": "Escalonado: OTP priorizado, bloqueo solo con R > θ2 y viaje imposible (v12)",
+      "legitimos_otp": 117,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 117,
+      "sospechosos_sin_verificacion": 730,
+      "sospechosos_otp": 847,
+      "sospechosos_bloqueados": 0,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 53.709575142675966
+    },
+    {
+      "esquema": "Tres niveles con bloqueo directo sobre θ2 (v11)",
+      "legitimos_otp": 117,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 117,
+      "sospechosos_sin_verificacion": 730,
+      "sospechosos_otp": 156,
+      "sospechosos_bloqueados": 691,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 53.709575142675966
     },
     {
       "esquema": "Dos niveles: acceso y bloqueo con θ1",
       "legitimos_otp": 0,
-      "legitimos_bloqueados": 137,
-      "legitimos_con_friccion": 137,
-      "sospechosos_sin_verificacion": 792,
+      "legitimos_bloqueados": 117,
+      "legitimos_con_friccion": 117,
+      "sospechosos_sin_verificacion": 730,
       "sospechosos_otp": 0,
-      "sospechosos_bloqueados": 785,
-      "pct_legitimos_bloqueados": 0.7107652399481194,
-      "pct_sospechosos_detenidos": 49.778059606848444
+      "sospechosos_bloqueados": 847,
+      "pct_legitimos_bloqueados": 0.6070038910505836,
+      "pct_sospechosos_detenidos": 53.709575142675966
     },
     {
       "esquema": "Dos niveles: acceso y bloqueo con θ2",
       "legitimos_otp": 0,
-      "legitimos_bloqueados": 9,
-      "legitimos_con_friccion": 9,
-      "sospechosos_sin_verificacion": 882,
+      "legitimos_bloqueados": 0,
+      "legitimos_con_friccion": 0,
+      "sospechosos_sin_verificacion": 886,
       "sospechosos_otp": 0,
-      "sospechosos_bloqueados": 695,
-      "pct_legitimos_bloqueados": 0.04669260700389105,
-      "pct_sospechosos_detenidos": 44.0710209258085
+      "sospechosos_bloqueados": 691,
+      "pct_legitimos_bloqueados": 0.0,
+      "pct_sospechosos_detenidos": 43.817374762206725
     },
     {
       "esquema": "Dos niveles: acceso y OTP con θ1 (sin bloqueo)",
-      "legitimos_otp": 137,
+      "legitimos_otp": 117,
       "legitimos_bloqueados": 0,
-      "legitimos_con_friccion": 137,
-      "sospechosos_sin_verificacion": 792,
-      "sospechosos_otp": 785,
+      "legitimos_con_friccion": 117,
+      "sospechosos_sin_verificacion": 730,
+      "sospechosos_otp": 847,
       "sospechosos_bloqueados": 0,
       "pct_legitimos_bloqueados": 0.0,
-      "pct_sospechosos_detenidos": 49.778059606848444
+      "pct_sospechosos_detenidos": 53.709575142675966
     },
     {
       "esquema": "OTP universal (MFA estática)",
@@ -68,7 +79,7 @@
   ],
   "contingencia": [
     {
-      "esquema": "P1: OTP ante fallo (v11)",
+      "esquema": "P1: OTP ante fallo (v12)",
       "legitimos_otp": 19275,
       "legitimos_bloqueados": 0,
       "legitimos_con_friccion": 19275,
@@ -105,50 +116,50 @@
     {
       "variante": "Modelo sin reentrenar (referencia)",
       "eventos_entrenamiento": 35969,
-      "f1": 0.6629213483146067,
-      "precision": 0.8697788697788698,
-      "recall": 0.5355521936459909,
-      "fpr": 0.00600362483008609
+      "f1": 0.6821994408201305,
+      "precision": 0.8883495145631068,
+      "recall": 0.5537065052950075,
+      "fpr": 0.005210693248753965
     },
     {
       "variante": "Sin protección: bloqueos no confirmados etiquetados como legítimos",
       "eventos_entrenamiento": 48063,
-      "f1": 0.6797752808988764,
-      "precision": 0.8918918918918919,
-      "recall": 0.5491679273827534,
-      "fpr": 0.004984141368373357
+      "f1": 0.6666666666666666,
+      "precision": 0.7876288659793814,
+      "recall": 0.5779122541603631,
+      "fpr": 0.01166742183960127
     },
     {
-      "variante": "Con protección (v11): bloqueos no confirmados excluidos",
-      "eventos_entrenamiento": 47718,
-      "f1": 0.6716279069767442,
-      "precision": 0.8719806763285024,
-      "recall": 0.546142208774584,
-      "fpr": 0.00600362483008609
+      "variante": "Con protección (v12): bloqueos no confirmados excluidos",
+      "eventos_entrenamiento": 47722,
+      "f1": 0.6786355475763016,
+      "precision": 0.8344370860927153,
+      "recall": 0.5718608169440242,
+      "fpr": 0.008495695514272768
     },
     {
       "variante": "Acumulado sin protección: ningún bloqueo de dic-abr confirmado, etiquetados como legítimos",
       "eventos_entrenamiento": 48063,
-      "f1": 0.10942956926658906,
-      "precision": 0.23737373737373738,
-      "recall": 0.07110438729198185,
-      "fpr": 0.01710466696873584
+      "f1": 0.1442786069651741,
+      "precision": 0.40559440559440557,
+      "recall": 0.08774583963691376,
+      "fpr": 0.009628454916175803
     },
     {
       "variante": "Acumulado con protección: ningún bloqueo de dic-abr confirmado, excluidos",
-      "eventos_entrenamiento": 46122,
-      "f1": 0.35294117647058826,
-      "precision": 0.4867021276595745,
-      "recall": 0.27685325264750377,
-      "fpr": 0.021862256456728592
+      "eventos_entrenamiento": 46510,
+      "f1": 0.4425196850393701,
+      "precision": 0.4614121510673235,
+      "recall": 0.42511346444780634,
+      "fpr": 0.03715450838241957
     },
     {
       "variante": "Etiquetas completas (cota superior, no disponible en operación)",
       "eventos_entrenamiento": 48063,
-      "f1": 0.6773283160865476,
-      "precision": 0.8955223880597015,
-      "recall": 0.5446293494704992,
-      "fpr": 0.00475758948799275
+      "f1": 0.6995348837209303,
+      "precision": 0.9082125603864735,
+      "recall": 0.5688350983358548,
+      "fpr": 0.004304485727231536
     }
   ]
 }

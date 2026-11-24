@@ -49,7 +49,7 @@ def hgb(seed=42):
 
 
 def particiones(path):
-    d, X, _ = preparar(pd.read_csv(path))
+    d, X, _ = preparar(pd.read_csv(path), usuario=False)
     mes = d["month"].replace({12: 0})
     tr, va, te = (mes <= 3).to_numpy(), (mes == 4).to_numpy(), mes.isin([5, 6]).to_numpy()
     P = {}

@@ -42,7 +42,7 @@ def main():
     filas = []
     for ind in ("f1", "precision", "recall", "fpr", "fpr_bloqueo", "legitimos_bloqueados", "otp", "auc_pr"):
         v = sem[ind]
-        filas.append(dict(indicador=ind, condicion="AdaptAuth-ML v11 (5 semillas)", n=len(v), media=v.mean(),
+        filas.append(dict(indicador=ind, condicion="AdaptAuth-ML v12 (5 semillas)", n=len(v), media=v.mean(),
                           mediana=v.median(), de=v.std(ddof=1), minimo=v.min(), maximo=v.max()))
     for nombre, clave in (("Reglas, umbral original", "reglas_umbral_original"), ("Reglas calibradas a igual FPR", "reglas_calibradas_igual_fpr")):
         r = val["comparacion_igual_fpr"][clave]
@@ -59,10 +59,10 @@ def main():
     dv, dt = d[va].reset_index(drop=True), d[te].reset_index(drop=True)
     m = ModeloAdaptAuth(seed=42).fit(X[tr].to_numpy(), d[tr].anomalo.to_numpy())
     cal = aa.calibrate(dv.assign(c_i=0.0), m.predict_proba(X[va].to_numpy())[:, 1], cfg, (1.0,))
-    dec = aa.decide(m.predict_proba(X[te].to_numpy())[:, 1], cal["theta1"], cal["theta2"], None, False)
+    dec = aa.decide_escalonado(m.predict_proba(X[te].to_numpy())[:, 1], cal["theta1"], cal["theta2"], dt["impossible_travel"].to_numpy())
     y = dt.anomalo.to_numpy(); pred = (dec >= 1).astype(int); blq = (dec == 2).astype(int)
     f1_obs = aa.binary_metrics(y, pred)["f1"]
-    assert abs(f1_obs - val["comparacion_igual_fpr"]["adaptauth_v11"]["f1"]) < 1e-9, "no reproduce la corrida del PI 13"
+    assert abs(f1_obs - val["comparacion_igual_fpr"]["adaptauth_v12"]["f1"]) < 1e-9, "no reproduce la corrida del PI 13"
 
     # ---------- Bootstrap por usuario del desempeño del modelo ----------
     u, inv = np.unique(dt["actor_pseudo_id"].to_numpy(), return_inverse=True)
@@ -81,7 +81,7 @@ def main():
     ci = stats.binomtest(b, b + c).proportion_ci(confidence_level=0.95, method="exact")
     or_ic = [ci.low / (1 - ci.low), ci.high / (1 - ci.high)]
 
-    comp = val["comparacion_igual_fpr"]; a, r = comp["adaptauth_v11"], comp["reglas_calibradas_igual_fpr"]
+    comp = val["comparacion_igual_fpr"]; a, r = comp["adaptauth_v12"], comp["reglas_calibradas_igual_fpr"]
     salida = dict(
         hipotesis_he2_f1=dict(meta=0.60, f1=f1_obs, ic95_usuario=ic(f1s), p_unilateral_f1_menor_o_igual_meta=float((f1s <= 0.60).mean())),
         fpr=dict(valor=float(fp.sum() / neg.sum()), ic95_usuario=ic(fprs), meta=0.05),

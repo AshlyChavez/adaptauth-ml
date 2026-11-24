@@ -64,7 +64,9 @@ def main():
 
     # ---------- A. Estructura de la decisión ----------
     esquemas = [
-        ("Tres niveles: acceso, OTP y bloqueo (v11)", np.where(p_t > t2, 2, np.where(p_t > t1, 1, 0))),
+        ("Escalonado: OTP priorizado, bloqueo solo con R > θ2 y viaje imposible (v12)",
+         aa.decide_escalonado(p_t, t1, t2, dt["impossible_travel"].to_numpy())),
+        ("Tres niveles con bloqueo directo sobre θ2 (v11)", np.where(p_t > t2, 2, np.where(p_t > t1, 1, 0))),
         ("Dos niveles: acceso y bloqueo con θ1", np.where(p_t > t1, 2, 0)),
         ("Dos niveles: acceso y bloqueo con θ2", np.where(p_t > t2, 2, 0)),
         ("Dos niveles: acceso y OTP con θ1 (sin bloqueo)", np.where(p_t > t1, 1, 0)),
@@ -75,7 +77,7 @@ def main():
 
     # ---------- B. Contingencia ante fallo del motor (todo el periodo de prueba sin motor) ----------
     politicas = [
-        ("P1: OTP ante fallo (v11)", np.ones_like(y)),
+        ("P1: OTP ante fallo (v12)", np.ones_like(y)),
         ("Sin contingencia: dejar pasar (fail-open)", np.zeros_like(y)),
         ("Sin contingencia: bloquear (fail-closed)", np.full_like(y, 2)),
     ]
@@ -94,13 +96,13 @@ def main():
     def reentrenar(Xr, yr):
         m = ModeloAdaptAuth().fit(Xr, yr, X[vaB].to_numpy(), dvB.anomalo.to_numpy())
         c = calibrar(m.predict_proba(X[vaB].to_numpy())[:, 1], dvB, cfg)
-        dec = aa.decide(m.predict_proba(Xj)[:, 1], c["theta1"], c["theta2"], None, False)
+        dec = aa.decide_escalonado(m.predict_proba(Xj)[:, 1], c["theta1"], c["theta2"], dj["impossible_travel"].to_numpy())
         r = aa.binary_metrics(yj, (dec >= 1).astype(int))
         return dict(f1=r["f1"], precision=r["precision"], recall=r["recall"], fpr=r["fpr"])
 
     filas = []
     todos_bloqueados = pB > t2  # escenario acumulado: ningún bloqueo de la ventana fue confirmado
-    est = aa.decide(mod.predict_proba(Xj)[:, 1], t1, t2, None, False)
+    est = aa.decide_escalonado(mod.predict_proba(Xj)[:, 1], t1, t2, dj["impossible_travel"].to_numpy())
     r = aa.binary_metrics(yj, (est >= 1).astype(int))
     filas.append(dict(variante="Modelo sin reentrenar (referencia)", eventos_entrenamiento=int(tr.sum()),
                       f1=r["f1"], precision=r["precision"], recall=r["recall"], fpr=r["fpr"]))
@@ -108,7 +110,7 @@ def main():
     filas.append(dict(variante="Sin protección: bloqueos no confirmados etiquetados como legítimos",
                       eventos_entrenamiento=int(len(yB)), **reentrenar(XB, y_ingenuo)))
     keep = ~no_confirmados
-    filas.append(dict(variante="Con protección (v11): bloqueos no confirmados excluidos",
+    filas.append(dict(variante="Con protección (v12): bloqueos no confirmados excluidos",
                       eventos_entrenamiento=int(keep.sum()), **reentrenar(XB[keep], yB[keep])))
     y_ing2 = yB.copy(); y_ing2[todos_bloqueados] = 0
     filas.append(dict(variante="Acumulado sin protección: ningún bloqueo de dic-abr confirmado, etiquetados como legítimos",

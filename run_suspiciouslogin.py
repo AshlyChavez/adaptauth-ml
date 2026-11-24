@@ -55,7 +55,35 @@ REGLAS = {"new_ip": 0.25, "is_new_country": 0.25, "impossible_travel": 0.30,
           "abnormal_login_hour": 0.15, "geo_cambio_continente": 0.05}
 
 
-def preparar(d: pd.DataFrame):
+VARIABLES_USUARIO = ["u_accesos_previos", "u_frac_mismo_pais", "u_frac_mismo_tipo", "u_tipo_nuevo", "u_pais_nuevo",
+                     "u_desv_hora", "u_ratio_gap", "u_noche_inusual"]
+
+
+def variables_usuario(d: pd.DataFrame) -> pd.DataFrame:
+    """v12 · Compara cada acceso con los accesos ANTERIORES del mismo usuario (sin fuga temporal).
+
+    El archivo está ordenado por usuario y, dentro de cada usuario, en orden cronológico (logins_30d crece).
+    En operación, estos valores se obtienen de una tabla de historial por usuario que se actualiza en cada acceso.
+    """
+    g = d.groupby("actor_pseudo_id", sort=False)
+    n_prev = g.cumcount()
+    frac = lambda col: np.where(n_prev > 0, d.groupby(["actor_pseudo_id", col], sort=False).cumcount() / n_prev.clip(lower=1), 0.0)
+    f_pais, f_tipo = frac("ip_country"), frac("login_type")
+    ang = 2 * np.pi * d["event_hour"] / 24
+    sin_prev = g["event_hour"].transform(lambda s: np.sin(2 * np.pi * s / 24).shift().expanding().mean()).fillna(0)
+    cos_prev = g["event_hour"].transform(lambda s: np.cos(2 * np.pi * s / 24).shift().expanding().mean()).fillna(0)
+    gap_prev = g["hours_since_last_login"].transform(lambda s: s.shift().expanding().mean()).fillna(0)
+    noct_prev = g["is_night_login"].transform(lambda s: s.shift().expanding().mean()).fillna(0)
+    return pd.DataFrame(dict(
+        u_accesos_previos=np.log1p(n_prev), u_frac_mismo_pais=f_pais, u_frac_mismo_tipo=f_tipo,
+        u_tipo_nuevo=((n_prev > 0) & (f_tipo == 0)).astype(float), u_pais_nuevo=((n_prev > 0) & (f_pais == 0)).astype(float),
+        u_desv_hora=np.where(n_prev > 0, 1 - (np.sin(ang) * sin_prev + np.cos(ang) * cos_prev), 0.0),
+        u_ratio_gap=np.clip(np.where(gap_prev > 0, d["hours_since_last_login"] / gap_prev.where(gap_prev > 0, 1), 0.0), 0, 50),
+        u_noche_inusual=d["is_night_login"] * (1 - noct_prev)), index=d.index)
+
+
+def preparar(d: pd.DataFrame, usuario: bool = True):
+    """usuario=False reproduce las variables de la v11 (ablaciones históricas de la v10 y la v11)."""
     d = d.copy()
     d["historial_disponible"] = (d["hours_since_last_login"] > 0).astype(int)
     d["geo_cambio_continente"] = (d["geo_jump"] == 2).astype(int)
@@ -63,13 +91,13 @@ def preparar(d: pd.DataFrame):
     d["ip_country"] = d["ip_country"].where(d["ip_country"].isin(top_paises), "Otro")
     num = [c for g in GRUPOS.values() for c in g]
     X = pd.get_dummies(d[num + CATEGORICAS], columns=CATEGORICAS, dummy_na=True, dtype=float)
-    X = X.fillna(0.0)
+    X = (pd.concat([X, variables_usuario(d)], axis=1) if usuario else X).fillna(0.0)
     d["anomalo"] = d["label"].astype(int)
     d["c_i"] = sum(w * d[r].astype(float) for r, w in REGLAS.items())
     d["arranque_frio"] = 1 - d["historial_disponible"]
     grupo_de = {c: g for g, cols in GRUPOS.items() for c in cols}
-    grupos_X = {c: grupo_de.get(c, "autenticacion" if c.startswith("login_type") else "red_geo")
-                for c in X.columns}
+    grupos_X = {c: "comportamiento_usuario" if c in VARIABLES_USUARIO else
+                grupo_de.get(c, "autenticacion" if c.startswith("login_type") else "red_geo") for c in X.columns}
     return d, X, grupos_X
 
 
@@ -83,7 +111,7 @@ def evaluar(nombre, s_val, s_test, dv, dt, cfg, alpha_grid=(1.0,), c_val=None, c
     cal = aa.calibrate(v, s_val, cfg, alpha_grid)
     R = aa.risk_score(s_test, np.zeros(len(dt)) if c_test is None else c_test, cal["alpha"])
     R_val = aa.risk_score(s_val, v["c_i"].to_numpy(), cal["alpha"])
-    dec = aa.decide(R, cal["theta1"], cal["theta2"], None, False)
+    dec = aa.decide_escalonado(R, cal["theta1"], cal["theta2"], dt["impossible_travel"].to_numpy())
     y = dt["anomalo"].to_numpy()
     res = dict(calibracion=cal, **aa.evaluate_decisions(y, dec),
                auc_roc=float(roc_auc_score(y, R)), auc_pr=float(average_precision_score(y, R)),

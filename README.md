@@ -8,7 +8,7 @@ Repositorio de la tesis *Modelo de autenticación adaptativa basado en Machine L
 - **Asesor:** Ing. Daniel Alfonso Quinto Pazce
 - **Método:** Design Science Research con evaluación cuasi-experimental anidada (línea base frente a AdaptAuth-ML)
 - **Tipo de artefacto:** modelo computacional / pipeline (aporte conceptual, Grupo A)
-- **Versión:** 11 (Isolation Forest evaluado y retirado del núcleo; θ2 con FPR de bloqueo ≤ 0.1 %)
+- **Versión:** 12 (v11 + 8 variables de comportamiento por usuario y decisión escalonada que prioriza el OTP)
 
 ## Descripción del modelo
 
@@ -19,17 +19,31 @@ Cuando un usuario ya validó su contraseña, AdaptAuth-ML hace tres cosas:
 
 | Componente | Función | Implementación |
 |---|---|---|
-| C1. Ingesta y variables | Variables de hora, red, ubicación, dispositivo e historial, calculadas solo con eventos previos (sin fuga temporal) | `src/adaptauth.py`, `src/cert.py` |
+| C1. Ingesta y variables | Variables de hora, red, ubicación, dispositivo e historial, más 8 variables que comparan el acceso con los accesos previos del mismo usuario; todas calculadas solo con eventos previos (sin fuga temporal) | `src/adaptauth.py`, `src/cert.py` |
 | C2. Motor de detección | Clasificador supervisado sobre el vector de variables | HistGradientBoostingClassifier (`src/modelo_adaptauth.py`) |
 | C3. Score de riesgo | R = P(ataque \| x) | `predict_proba` del clasificador |
-| C4. Decisión adaptativa | Umbrales θ1 y θ2 calibrados en validación; reglas P1 a P3 | `calibrate`, `decide` en `src/adaptauth.py` |
+| C4. Decisión adaptativa | Umbrales θ1 y θ2 calibrados en validación; decisión escalonada; reglas P1 a P3 | `calibrate`, `decide_escalonado` en `src/adaptauth.py` |
 | C5. Monitoreo y explicación | Registro de decisiones y top-3 variables por alerta | SHAP, `run_requisitos_sl.py` |
 | C6. Reentrenamiento | Reentrenamiento mensual sin bloqueos no confirmados | `run_requisitos_sl.py` (prueba CA-C6-02) |
 
 **Ecuaciones:**
 
 - **Score de riesgo:** R = P(ataque | x)
-- **Decisión:** acceso directo si R ≤ θ1, OTP si θ1 < R ≤ θ2 y bloqueo si R > θ2.
+- **Decisión (v12, escalonada):** acceso directo si R ≤ θ1 y OTP si R > θ1, incluido el riesgo alto. El bloqueo se aplica solo con evidencia de ataque: el OTP falla, o R > θ2 junto con viaje imposible.
+- Las métricas de detección no cambian frente a la v11, porque el OTP y el bloqueo detienen el acceso por igual; cambia la fricción: los accesos de riesgo alto pasan por OTP en lugar de bloquearse.
+
+**Variables por usuario (v12).** Se calculan solo con los accesos anteriores del mismo usuario (`variables_usuario` en `run_suspiciouslogin.py`):
+
+| Variable | Qué mide |
+|---|---|
+| `u_accesos_previos` | Número de accesos previos (log) |
+| `u_frac_mismo_pais` / `u_frac_mismo_tipo` | Fracción de accesos previos desde el mismo país / con el mismo tipo de inicio |
+| `u_pais_nuevo` / `u_tipo_nuevo` | País o tipo de inicio nunca visto en el usuario |
+| `u_desv_hora` | Desviación circular de la hora frente a la hora media previa del usuario |
+| `u_ratio_gap` | Horas desde el último acceso / intervalo medio previo (recortado a 0–50) |
+| `u_noche_inusual` | Acceso nocturno en un usuario que rara vez entra de noche |
+
+La variante se eligió solo con el mes de validación (abril), por AUC-PR, y se evaluó una vez en la prueba.
 
 **Calibración:**
 - θ1 maximiza F1 con FPR ≤ 5 %.
@@ -45,7 +59,7 @@ adaptauth-ml/
 ├── src/
 │   ├── adaptauth.py            # núcleo: reescalado, score, calibración, decisión, métricas, pruebas pareadas
 │   ├── cert.py                 # carga y variables de CERT r4.2 (unidad usuario-día)
-│   ├── modelo_adaptauth.py     # AdaptAuth-ML v11: HistGradientBoosting
+│   ├── modelo_adaptauth.py     # AdaptAuth-ML: HistGradientBoosting
 │   ├── modelo_apilado.py       # ablación v10: Isolation Forest + HistGradientBoosting apilado
 │   └── figures.py              # figuras de resultados
 ├── run_suspiciouslogin.py      # experimento principal en SuspiciousLogin
@@ -107,12 +121,13 @@ En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los dat
 | Reglas estáticas | 0.549 | 0.090 | 0.009 | 0.250 | 0.004 | 0.11 % |
 | Isolation Forest | 0.630 | 0.109 | 0.044 | 0.051 | 0.038 | 5.80 % |
 | Apilado con IF (v10, ablación) | 0.881 | 0.640 | 0.620 | 0.814 | 0.501 | 0.93 % |
-| **AdaptAuth-ML (v11)** | **0.859** | **0.634** | **0.628** | **0.851** | **0.498** | **0.71 %** |
+| AdaptAuth-ML (v11) | 0.859 | 0.634 | 0.628 | 0.851 | 0.498 | 0.71 % |
+| **AdaptAuth-ML (v12)** | **0.886** | **0.688** | **0.667** | **0.879** | **0.537** | **0.61 %** |
 
-- **Prueba t pareada** en 14 grupos: frente a las reglas, t(13) = 33.87, p < 0.001, dz = 9.05.
-- **Bootstrap por usuario** (1 000 réplicas): diferencia de F1 frente a las reglas de 0.620 (IC 95 %: 0.568 a 0.665).
-- **Ablación:** el apilado con IF frente a AdaptAuth-ML, t(13) = −2.10, p = 0.056; bootstrap −0.008 (IC 95 %: −0.014 a −0.002).
-- **Bloqueo (θ2):** 9 legítimos bloqueados de 19 275 (FPR de bloqueo 0.05 %); con la regla anterior (≤ 1 %) eran 85.
+- **Meta del F1 (HE2):** F1 = 0.667, IC 95 % por bootstrap de usuarios de 0.620 a 0.712; p (F1 ≤ 0.60) = 0.004.
+- **Prueba t pareada** en 14 grupos: v12 frente a las reglas, t(13) = 50.54, p < 0.001, dz = 13.51.
+- **Ablación (v11):** el apilado con IF frente a AdaptAuth-ML v11, t(13) = −2.10, p = 0.056; bootstrap −0.008 (IC 95 %: −0.014 a −0.002).
+- **Decisión escalonada (v12):** 964 accesos con OTP (847 sospechosos y 117 legítimos) y 0 bloqueos directos; se detiene el 53.7 % de los sospechosos, igual que con bloqueo directo sobre θ2.
 - **Arranque en frío:** con 0.5 % a 100 % de usuarios etiquetados, la diferencia de AUC-PR del apilado está entre −0.007 y +0.007 (`results_levantamiento/`).
 
 **CERT r4.2** (5 grupos de empleados, 115 días maliciosos)
@@ -133,43 +148,44 @@ En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los dat
 
 | Requisito | Resultado |
 |---|---|
-| RNF-04 inferencia (p50 / p95 / p99) | 2.7 / 4.2 / 5.2 ms |
-| RNF-05 respuesta C1 a C4 (p50 / p95 / p99), misma corrida | 9.7 / 14.4 / 15.6 ms |
+| RNF-04 inferencia (p50 / p95 / p99) | 1.4 / 2.2 / 3.6 ms |
+| RNF-05 respuesta C1 a C4 (p50 / p95 / p99), misma corrida | 5.0 / 9.0 / 9.7 ms |
 | RNF-07 score medio de legítimos | 0.024 |
-| RNF-08 reentrenamiento de 500 000 eventos (prueba de carga: remuestreo con reposición del entrenamiento) | 0.63 min |
-| RNF-10 alertas explicadas | 922 de 922 |
+| RNF-08 reentrenamiento de 500 000 eventos (prueba de carga: remuestreo con reposición del entrenamiento) | 0.60 min |
+| RNF-10 alertas explicadas | 964 de 964 |
 | RNF-12 identificadores directos en registros | 0 |
 | RNF-06 contingencia OTP | 100 % |
-| CA-C6-02 F1 reentrenado frente al estático (un ciclo simulado; prueba solo en junio) | 0.661 frente a 0.663 |
+| CA-C6-02 F1 reentrenado frente al estático (un ciclo simulado; prueba solo en junio) | 0.701 frente a 0.682 |
 
-Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno por uno: RNF-04 mide solo la inferencia (C2 y C3) y RNF-05 la respuesta completa de C1 a C4, que incluye construir el vector de variables.
+Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno por uno: RNF-04 mide solo la inferencia (C2 y C3) y RNF-05 la respuesta completa de C1 a C4, que incluye construir el vector de variables y consultar el historial del usuario.
 
 **Ablación de componentes** (`results_ablacion_componentes/`, prueba de SuspiciousLogin, mismo clasificador)
 
 | Esquema de decisión | Legítimos bloqueados | Legítimos con OTP | Sospechosos sin verificación |
 |---|---|---|---|
-| Tres niveles (v11) | 9 | 128 | 792 |
-| Dos niveles: acceso o bloqueo con θ1 | 137 | 0 | 792 |
-| Dos niveles: acceso o bloqueo con θ2 | 9 | 0 | 882 |
+| Escalonado con OTP priorizado (v12) | 0 | 117 | 730 |
+| Tres niveles con bloqueo directo sobre θ2 (v11) | 0 | 117 | 730 |
+| Dos niveles: acceso o bloqueo con θ1 | 117 | 0 | 730 |
+| Dos niveles: acceso o bloqueo con θ2 | 0 | 0 | 886 |
 | OTP universal | 0 | 19 275 | 0 |
 
 - **Contingencia:** ante una caída del motor, sin la regla P1 hay que elegir entre dejar pasar a los 1 577 sospechosos o bloquear a los 19 275 legítimos.
-- **Reentrenamiento protegido:** en un ciclo no muestra beneficio (F1 0.672 frente a 0.680 sin protección); con bloqueos sin confirmar acumulados limita la caída (0.353 frente a 0.109), pero los bloqueos deben confirmarse para conservar la señal de ataque.
+- **Reentrenamiento protegido:** en un ciclo mejora el F1 (0.679 frente a 0.667 sin protección); con bloqueos sin confirmar acumulados limita la caída (0.443 frente a 0.144), pero los bloqueos deben confirmarse para conservar la señal de ataque.
 - **CERT r4.2:** la unidad es el día-empleado y las variables usan la actividad del día completo; ese escenario demuestra detección diaria con historial, no la decisión en el inicio de sesión.
 
 ## Validación (PI 13)
 
-La corrida de validación usa el commit congelado `5f6f3b1`, las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
+La corrida de validación usa la etiqueta `v12` del repositorio (la v11 quedó en el commit `5f6f3b1`), las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
 
-| Comparación en SuspiciousLogin (prueba, 20 852 eventos) | Reglas con umbral para el mismo FPR de validación | AdaptAuth-ML v11 |
+| Comparación en SuspiciousLogin (prueba, 20 852 eventos) | Reglas con umbral para el mismo FPR de validación | AdaptAuth-ML v12 |
 |---|---|---|
-| Recall | 0.022 | 0.498 |
-| FPR | 1.39 % | 0.71 % |
-| F1 | 0.036 | 0.628 |
+| Recall | 0.021 | 0.537 |
+| FPR | 1.29 % | 0.61 % |
+| F1 | 0.036 | 0.667 |
 
-- **Prueba principal:** bootstrap por usuario (2 000 réplicas, 12 765 usuarios) de la diferencia de recall: +0.478 (IC 95 %: 0.422 a 0.536). McNemar exacto sobre los 1 577 sospechosos: 767 detectados solo por AdaptAuth-ML frente a 16 solo por las reglas (p < 0.001).
-- **Cinco semillas:** F1 0.629 ± 0.003; legítimos bloqueados 6.6 ± 2.3.
-- **Curva recall-FPR** (`results_validacion_pi13/o6_recall_fpr_sl.csv`): con el umbral para FPR ≤ 5 % el recall sube a 0.566, pero la precisión baja a 0.53.
+- **Prueba principal:** bootstrap por usuario (2 000 réplicas, 12 765 usuarios) de la diferencia de recall: +0.517 (IC 95 %: 0.461 a 0.574). McNemar exacto sobre los 1 577 sospechosos: 830 detectados solo por AdaptAuth-ML frente a 16 solo por las reglas (p < 0.001).
+- **Cinco semillas:** F1 0.666 ± 0.007; AUC-PR 0.690 ± 0.004; legítimos bloqueados 0.
+- **Curva recall-FPR** (`results_validacion_pi13/o6_recall_fpr_sl.csv`): con el umbral para FPR ≤ 5 % el recall sube a 0.637, pero la precisión baja a 0.54.
 - **CERT r4.2:** `run_cert_v2.py` calcula además la diferencia de AUC y de recall con FPR ≤ 0.1 % frente a las reglas, con IC 95 % por bootstrap de empleados (`results_cert_v11/validacion_pi13_cert.json`).
 
 ## Prevención de fuga de información

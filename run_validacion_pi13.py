@@ -106,7 +106,7 @@ def main():
         m = ModeloAdaptAuth(seed=s).fit(Xtr, dtr.anomalo.to_numpy())
         pv, pt = m.predict_proba(Xv)[:, 1], m.predict_proba(Xt)[:, 1]
         cal = aa.calibrate(dv.assign(c_i=0.0), pv, cfg, (1.0,))
-        dec = aa.decide(pt, cal["theta1"], cal["theta2"], None, False)
+        dec = aa.decide_escalonado(pt, cal["theta1"], cal["theta2"], dt["impossible_travel"].to_numpy())
         r1 = aa.binary_metrics(yt, (dec >= 1).astype(int)); leg = yt == 0
         filas.append(dict(semilla=s, theta1=cal["theta1"], theta2=cal["theta2"], f1=r1["f1"], precision=r1["precision"],
                           recall=r1["recall"], fpr=r1["fpr"], fpr_bloqueo=float(((dec == 2) & leg).sum() / leg.sum()),
@@ -127,7 +127,7 @@ def main():
     pred_reg = (ct > thr_r).astype(int)
     pred_reg_fija = (aa.decide(dt["c_i"].to_numpy(), *[aa.calibrate(dv, np.zeros(len(dv)), cfg, (0.0,))[k] for k in ("theta1", "theta2")], None, False) >= 1).astype(int)
     comp = {}
-    for nombre, pr in (("reglas_umbral_original", pred_reg_fija), ("reglas_calibradas_igual_fpr", pred_reg), ("adaptauth_v11", pred_ada)):
+    for nombre, pr in (("reglas_umbral_original", pred_reg_fija), ("reglas_calibradas_igual_fpr", pred_reg), ("adaptauth_v12", pred_ada)):
         m = aa.binary_metrics(yt, pr); comp[nombre] = dict(**{k: m[k] for k in ("f1", "precision", "recall", "fpr")}, **conteos(yt, pr))
     comp["fpr_validacion_objetivo"] = fpr_val_ada
     comp["auc_roc"] = dict(reglas=float(roc_auc_score(yt, dt["c_i"])), adaptauth=float(roc_auc_score(yt, ref["pt"])))
@@ -144,19 +144,19 @@ def main():
         ma, mr = aa.binary_metrics(yt, (ref["pt"] > ta).astype(int)), aa.binary_metrics(yt, (ct > tr_).astype(int))
         curva.append(dict(fpr_objetivo=f, umbral_adaptauth=ta, fpr_prueba_adaptauth=ma["fpr"], recall_adaptauth=ma["recall"],
                           precision_adaptauth=ma["precision"], fpr_prueba_reglas=mr["fpr"], recall_reglas=mr["recall"]))
-    curva.append(dict(fpr_objetivo="θ1 (máximo F1)", umbral_adaptauth=ref["cal"]["theta1"], fpr_prueba_adaptauth=comp["adaptauth_v11"]["fpr"],
-                      recall_adaptauth=comp["adaptauth_v11"]["recall"], precision_adaptauth=comp["adaptauth_v11"]["precision"],
+    curva.append(dict(fpr_objetivo="θ1 (máximo F1)", umbral_adaptauth=ref["cal"]["theta1"], fpr_prueba_adaptauth=comp["adaptauth_v12"]["fpr"],
+                      recall_adaptauth=comp["adaptauth_v12"]["recall"], precision_adaptauth=comp["adaptauth_v12"]["precision"],
                       fpr_prueba_reglas=comp["reglas_calibradas_igual_fpr"]["fpr"], recall_reglas=comp["reglas_calibradas_igual_fpr"]["recall"]))
     pd.DataFrame(curva).to_csv(OUT / "o6_recall_fpr_sl.csv", index=False)
 
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     fa, ra, _ = roc_curve(yt, ref["pt"]); fr, rr, _ = roc_curve(yt, dt["c_i"])
     fig, ax = plt.subplots(figsize=(7.6, 4.2))
-    ax.plot(fa * 100, ra, color="#2a78d6", lw=2, label="AdaptAuth-ML v11")
+    ax.plot(fa * 100, ra, color="#2a78d6", lw=2, label="AdaptAuth-ML v12")
     ax.plot(fr * 100, rr, color="#eb6834", lw=2, ls="--", label="Reglas estáticas (puntaje c_i)")
     for row in curva[:-1]:
         ax.scatter(row["fpr_prueba_adaptauth"] * 100, row["recall_adaptauth"], color="#2a78d6", zorder=3)
-    ax.scatter(comp["adaptauth_v11"]["fpr"] * 100, comp["adaptauth_v11"]["recall"], marker="D", s=50, color="#1f1f1d", zorder=4, label="θ1 calibrado")
+    ax.scatter(comp["adaptauth_v12"]["fpr"] * 100, comp["adaptauth_v12"]["recall"], marker="D", s=50, color="#1f1f1d", zorder=4, label="θ1 calibrado")
     ax.axvline(5, color="#9a9890", ls=":", lw=1); ax.text(5.1, 0.05, "Presupuesto FPR 5 %", fontsize=8, color="#6a7487")
     ax.set_xlim(0, 10); ax.set_ylim(0, 1); ax.set_xlabel("FPR en prueba (%)"); ax.set_ylabel("Recall")
     ax.grid(alpha=.3); ax.legend(frameon=False, fontsize=8.5, loc="lower right")
@@ -169,7 +169,7 @@ def main():
                 so=platform.platform(), cpu=platform.processor() or platform.machine(),
                 eventos=dict(entrenamiento=int(tr.sum()), validacion=int(va.sum()), prueba=int(te.sum()),
                              sospechosos_prueba=int(yt.sum())),
-                confirmatorio=False, nota="Mayo-junio se usó en versiones anteriores (v5, v6, v9, v10, v11, arranque en frío y ablación): resultados no confirmatorios.",
+                confirmatorio=False, nota="Mayo-junio se usó en versiones anteriores (v5, v6, v9, v10, v11, v12, arranque en frío y ablación): resultados no confirmatorios.",
                 segundos=round(time.time() - t0, 1))
     salida = dict(info=info, cp01_semillas=resumen_sem.to_dict(), comparacion_igual_fpr=comp,
                   prueba_principal_bootstrap_usuario=boot, mcnemar_sospechosos=mc, o6_curva=curva)

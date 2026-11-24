@@ -472,6 +472,23 @@ def decide(R: np.ndarray, theta1: float, theta2: float, cold: np.ndarray | None 
     return dec
 
 
+def decide_escalonado(R: np.ndarray, theta1: float, theta2: float, senal_dura: np.ndarray | None = None,
+                      otp_fallido: np.ndarray | None = None) -> np.ndarray:
+    """Política de la v12 (prioriza OTP). 0 = acceso directo, 1 = OTP, 2 = bloqueo.
+
+    Todo riesgo mayor que θ1 recibe OTP, incluido el riesgo alto. El bloqueo solo ocurre con evidencia de ataque:
+    el OTP falla (dato de operación) o el riesgo supera θ2 junto con una señal dura (viaje imposible).
+    """
+    R = np.asarray(R)
+    dec = np.where(R > theta1, 1, 0)
+    duro = np.zeros(len(R), dtype=bool)
+    if senal_dura is not None:
+        duro |= (R > theta2) & (np.asarray(senal_dura) == 1)
+    if otp_fallido is not None:
+        duro |= (dec == 1) & np.asarray(otp_fallido, dtype=bool)
+    return np.where(duro, 2, dec)
+
+
 # --------------------------------------------------------------------------------------
 # 4. Métricas (dos análisis binarios sobre la decisión de tres niveles)
 # --------------------------------------------------------------------------------------
