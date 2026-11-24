@@ -94,7 +94,7 @@ python run_validacion_pi13.py --data data/suspicious_logins_public_v1.csv
 python run_cert_v2.py --dir data/CERT_r4.2 --frio
 ```
 
-**Informe de la versión 12:** `notebooks/04_AdaptAuthML_v12_Informe.ipynb` documenta, con resultados ejecutados, la incorporación de las variables por usuario y la política escalonada ([abrir en Colab](https://colab.research.google.com/github/AshlyChavez/adaptauth-ml/blob/main/notebooks/04_AdaptAuthML_v12_Informe.ipynb)).
+**Reproducción de la versión 12:** `notebooks/04_Reproduccion_v12.ipynb` reproduce la incorporación de las variables por usuario y la política escalonada ([abrir en Colab](https://colab.research.google.com/github/AshlyChavez/adaptauth-ml/blob/main/notebooks/04_Reproduccion_v12.ipynb)).
 
 **Demostración en Colab:** `notebooks/00_AdaptAuthML_Demo.ipynb` descarga este repositorio y el dataset, ejecuta los experimentos (pasos 1 a 7) y copia los resultados de CERT a Google Drive ([abrir en Colab](https://colab.research.google.com/github/AshlyChavez/adaptauth-ml/blob/main/notebooks/00_AdaptAuthML_Demo.ipynb)).
 
