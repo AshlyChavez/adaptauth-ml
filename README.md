@@ -6,16 +6,15 @@ Repositorio de la tesis *Modelo de autenticación adaptativa basado en Machine L
 
 - **Autora:** Ashly Herminia Jasmín Chávez Marón
 - **Asesor:** Ing. Daniel Alfonso Quinto Pazce
-- **Método:** Design Science Research con evaluación cuasi-experimental anidada (línea base frente a AdaptAuth-ML)
 - **Tipo de artefacto:** modelo computacional / pipeline (aporte conceptual, Grupo A)
-- **Versión:** 12 (v11 + 8 variables de comportamiento por usuario y decisión escalonada que prioriza el OTP)
+- **Versión:** 12 
 
 ## Descripción del modelo
 
 Cuando un usuario ya validó su contraseña, AdaptAuth-ML hace tres cosas:
-- construye un vector de variables contextuales con información previa al evento;
-- estima un score de riesgo R ∈ [0, 1];
-- asigna una de tres respuestas: **acceso directo**, **verificación OTP** o **bloqueo**.
+- Construye un vector de variables contextuales con información previa al evento;
+- Estima un score de riesgo R ∈ [0, 1];
+- Asigna una de tres respuestas: **acceso directo**, **verificación OTP** o **bloqueo**.
 
 | Componente | Función | Implementación |
 |---|---|---|
@@ -171,7 +170,7 @@ La corrida de validación usa el commit congelado `e67f5a7` (v12; la v11 quedó 
 | FPR | 1.29 % | 0.61 % |
 | F1 | 0.036 | 0.667 |
 
-- **Prueba principal:** bootstrap por usuario (2 000 réplicas, 12 765 usuarios) de la diferencia de recall: +0.517 (IC 95 %: 0.461 a 0.574). McNemar exacto sobre los 1 577 sospechosos: 830 detectados solo por AdaptAuth-ML frente a 16 solo por las reglas (p < 0.001).
+- **Prueba principal:** bootstrap por usuario  de la diferencia de recall: +0.517 (IC 95 %: 0.461 a 0.574). McNemar exacto sobre los 1 577 sospechosos: 830 detectados solo por AdaptAuth-ML frente a 16 solo por las reglas (p < 0.001).
 - **Cinco semillas:** F1 0.666 ± 0.007; AUC-PR 0.690 ± 0.004; legítimos bloqueados 0.
 - **Curva recall-FPR** (`results_validacion_pi13/o6_recall_fpr_sl.csv`): con el umbral para FPR ≤ 5 % el recall sube a 0.637, pero la precisión baja a 0.54.
 - **CERT r4.2:** `run_cert_v2.py` calcula además la diferencia de AUC y de recall con FPR ≤ 0.1 % frente a las reglas, con IC 95 % por bootstrap de empleados (`results_cert_v11/validacion_pi13_cert.json`).
@@ -184,15 +183,9 @@ La corrida de validación usa el commit congelado `e67f5a7` (v12; la v11 quedó 
   - SuspiciousLogin usa una partición temporal: entrenamiento de diciembre a marzo, validación en abril y prueba en mayo y junio.
   - CERT r4.2 usa validación cruzada por empleado, de modo que ningún empleado aparece en entrenamiento y prueba a la vez.
 
-## Limitaciones
-
-- La etiqueta de SuspiciousLogin es la señal de sospecha de Google Workspace, no un ataque confirmado.
-- CERT r4.2 es un conjunto sintético con escenarios de ataque guionados.
-- Ningún dataset proviene de PYMES peruanas.
-
 ## Uso de inteligencia artificial
 
-La autora utilizó herramientas de inteligencia artificial generativa como apoyo para orientar el análisis de los modelos, revisar la precisión de los cálculos y del código, e identificar puntos de mejora. Las decisiones de diseño, la ejecución de los experimentos, la verificación de los resultados y la interpretación son responsabilidad de la autora.
+Se utilizó herramientas de inteligencia artificial generativa como apoyo para revisar la precisión de los cálculos y del código, e identificar puntos de mejora.
 
 ## Licencia
 
