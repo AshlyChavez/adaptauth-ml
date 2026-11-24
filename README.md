@@ -29,21 +29,7 @@ Cuando un usuario ya validó su contraseña, AdaptAuth-ML hace tres cosas:
 **Ecuaciones:**
 
 - **Score de riesgo:** R = P(ataque | x)
-- **Decisión (v12, escalonada):** acceso directo si R ≤ θ1 y OTP si R > θ1, incluido el riesgo alto. El bloqueo se aplica solo con evidencia de ataque: el OTP falla, o R > θ2 junto con viaje imposible.
-- Las métricas de detección no cambian frente a la v11, porque el OTP y el bloqueo detienen el acceso por igual; cambia la fricción: los accesos de riesgo alto pasan por OTP en lugar de bloquearse.
-
-**Variables por usuario (v12).** Se calculan solo con los accesos anteriores del mismo usuario (`variables_usuario` en `run_suspiciouslogin.py`):
-
-| Variable | Qué mide |
-|---|---|
-| `u_accesos_previos` | Número de accesos previos (log) |
-| `u_frac_mismo_pais` / `u_frac_mismo_tipo` | Fracción de accesos previos desde el mismo país / con el mismo tipo de inicio |
-| `u_pais_nuevo` / `u_tipo_nuevo` | País o tipo de inicio nunca visto en el usuario |
-| `u_desv_hora` | Desviación circular de la hora frente a la hora media previa del usuario |
-| `u_ratio_gap` | Horas desde el último acceso / intervalo medio previo (recortado a 0–50) |
-| `u_noche_inusual` | Acceso nocturno en un usuario que rara vez entra de noche |
-
-La variante se eligió solo con el mes de validación (abril), por AUC-PR, y se evaluó una vez en la prueba.
+- **Decisión (v12):** acceso directo si R ≤ θ1; OTP si R > θ1; bloqueo si el OTP falla o si R > θ2 con viaje imposible.
 
 **Calibración:**
 - θ1 maximiza F1 con FPR ≤ 5 %.
@@ -112,6 +98,99 @@ python run_cert_v2.py --dir data/CERT_r4.2 --frio
 
 En Google Colab, los cuadernos de `notebooks/` montan Google Drive, leen los datos desde la carpeta `AdaptAuth-ML` y guardan los resultados en la misma carpeta.
 
+## Informe de la versión 12
+
+### 1. Objetivo
+
+Evaluar si incorporar variables de comportamiento por usuario eleva el F1 de AdaptAuth-ML sobre la meta de 0.60 con significancia estadística, y si una política de decisión escalonada reduce los bloqueos sin pérdida de detección.
+
+### 2. Método
+
+**Datos.** SuspiciousLogin v1, partición temporal: entrenamiento de diciembre a marzo (35 969 eventos), validación en abril (12 094) y prueba en mayo y junio (20 852; 1 577 sospechosos; 12 765 usuarios).
+
+**Variables incorporadas.** Ocho variables calculadas solo con los accesos anteriores del mismo usuario (`variables_usuario` en `run_suspiciouslogin.py`):
+
+| Variable | Definición |
+|---|---|
+| `u_accesos_previos` | log(1 + número de accesos previos) |
+| `u_frac_mismo_pais` | Fracción de accesos previos desde el mismo país |
+| `u_frac_mismo_tipo` | Fracción de accesos previos con el mismo tipo de inicio |
+| `u_pais_nuevo` | 1 si el país no aparece en el historial del usuario |
+| `u_tipo_nuevo` | 1 si el tipo de inicio no aparece en el historial del usuario |
+| `u_desv_hora` | 1 − cos(hora actual − hora media circular previa) |
+| `u_ratio_gap` | Horas desde el último acceso / intervalo medio previo, acotado a [0, 50] |
+| `u_noche_inusual` | Acceso nocturno × (1 − fracción previa de accesos nocturnos) |
+
+**Protocolo de selección.** Se compararon tres variantes solo con el mes de validación, por AUC-PR; la variante elegida se evaluó una única vez en la prueba.
+
+| Variante | AUC-PR en validación |
+|---|---|
+| A. Variables de la v11 | 0.589 |
+| **B. v11 + variables por usuario (elegida)** | **0.682** |
+| C. B + rareza del contexto (país × tipo, país × franja horaria) | 0.682 |
+
+C no superó a B, por lo que se eligió la variante más simple.
+
+**Clasificador y calibración.** Sin cambios respecto de la v11: HistGradientBoosting (semilla 42; 400 iteraciones; tasa 0.05; 31 hojas; L2 = 1.0). θ1 maximiza el F1 con FPR ≤ 5 % y θ2 cumple FPR de bloqueo ≤ 0.1 %, ambos calibrados en abril.
+
+**Política de decisión.** Todo acceso con R > θ1 recibe OTP, incluido el riesgo alto. El bloqueo directo requiere R > θ2 junto con viaje imposible; en operación también se bloquea cuando el OTP falla (`decide_escalonado` en `src/adaptauth.py`).
+
+**Análisis estadístico.** Bootstrap por conglomerados de usuario (2 000 réplicas), McNemar exacto sobre los sospechosos, cinco semillas y prueba t pareada en 14 grupos.
+
+### 3. Resultados
+
+**Tabla 1.** Desempeño en la prueba (mayo y junio, n = 20 852).
+
+| Indicador | v11 | v12 |
+|---|---|---|
+| AUC-ROC | 0.859 | 0.886 |
+| AUC-PR | 0.634 | 0.688 |
+| F1 | 0.628 | **0.667** |
+| IC 95 % del F1 | 0.581 a 0.678 | **0.620 a 0.712** |
+| p (F1 ≤ 0.60) | 0.115 | **0.004** |
+| Precisión | 0.851 | 0.879 |
+| Recall | 0.498 | 0.537 |
+| FPR | 0.71 % | 0.61 % |
+| θ1 / θ2 | 0.21 / 0.56 | 0.22 / 0.95 |
+
+**Tabla 2.** Decisiones de la v12 en la prueba.
+
+| Decisión | Legítimos | Sospechosos |
+|---|---|---|
+| Acceso directo | 19 158 | 730 |
+| OTP | 117 | 847 |
+| Bloqueo | 0 | 0 |
+
+**Tabla 3.** Comparación con las reglas calibradas al mismo FPR de validación.
+
+| Indicador | Reglas | v12 | Diferencia (IC 95 %) |
+|---|---|---|---|
+| Recall | 0.021 | 0.537 | +0.517 (0.461 a 0.574) |
+| FPR | 1.29 % | 0.61 % | −0.67 pp (−0.94 a −0.39) |
+| F1 | 0.036 | 0.667 | +0.631 (0.585 a 0.678) |
+
+- **McNemar exacto:** 830 sospechosos detectados solo por la v12 frente a 16 solo por las reglas (p < 0.001).
+- **Cinco semillas:** F1 de 0.666 ± 0.007, AUC-PR de 0.690 ± 0.004 y 0 legítimos bloqueados.
+- **Prueba t pareada (14 grupos):** frente a las reglas, t(13) = 50.54, p < 0.001, dz = 13.51.
+- **Importancia por permutación (pérdida de AUC-PR):** red y geolocalización 0.559; comportamiento por usuario 0.084; autenticación 0.059; temporal 0.007.
+- **Requisitos no funcionales:** inferencia p99 de 3.6 ms y respuesta completa p99 de 9.7 ms, con consulta del historial del usuario incluida.
+
+### 4. Conclusión
+
+La v12 alcanza un F1 de 0.667 con límite inferior del IC 95 % de 0.620, de modo que supera la meta de 0.60 con significancia (p = 0.004). La política escalonada mantiene la detección (53.7 % de sospechosos detenidos) y elimina los bloqueos directos: los 847 sospechosos detenidos pasan por OTP.
+
+### 5. Reproducción
+
+```bash
+python run_suspiciouslogin.py --data data/suspicious_logins_public_v1.csv
+python run_validacion_pi13.py --data data/suspicious_logins_public_v1.csv
+python run_analisis_pi14.py --data data/suspicious_logins_public_v1.csv
+python run_ablacion_componentes.py --data data/suspicious_logins_public_v1.csv
+python run_requisitos_sl.py --data data/suspicious_logins_public_v1.csv
+```
+
+Las ablaciones históricas (`run_levantamiento.py`, `run_analisis_complementario.py`) se ejecutan con las variables de la v11 (`preparar(..., usuario=False)`).
+
 ## Resultados principales
 
 **SuspiciousLogin** (prueba: mayo y junio, n = 20 852, 7.6 % sospechosos)
@@ -175,7 +254,7 @@ Las latencias se midieron en la misma corrida, con 1 000 eventos procesados uno 
 
 ## Validación (PI 13)
 
-La corrida de validación usa la etiqueta `v12` del repositorio (la v11 quedó en el commit `5f6f3b1`), las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
+La corrida de validación usa el commit congelado `e67f5a7` (v12; la v11 quedó en `5f6f3b1`), las versiones exactas de `requirements-validacion.txt` y el cuaderno `notebooks/03_Validacion_PI13.ipynb`. Los resultados de mayo y junio de SuspiciousLogin son **no confirmatorios**, porque ese periodo se usó en versiones anteriores.
 
 | Comparación en SuspiciousLogin (prueba, 20 852 eventos) | Reglas con umbral para el mismo FPR de validación | AdaptAuth-ML v12 |
 |---|---|---|
@@ -201,6 +280,10 @@ La corrida de validación usa la etiqueta `v12` del repositorio (la v11 quedó e
 - La etiqueta de SuspiciousLogin es la señal de sospecha de Google Workspace, no un ataque confirmado.
 - CERT r4.2 es un conjunto sintético con escenarios de ataque guionados.
 - Ningún dataset proviene de PYMES peruanas.
+
+## Uso de inteligencia artificial
+
+La autora utilizó herramientas de inteligencia artificial generativa como apoyo para orientar el análisis de los modelos, revisar la precisión de los cálculos y del código, e identificar puntos de mejora. Las decisiones de diseño, la ejecución de los experimentos, la verificación de los resultados y la interpretación son responsabilidad de la autora.
 
 ## Licencia
 
