@@ -182,8 +182,10 @@ def main():
     res["reglas_estaticas"], decs["reglas_estaticas"], Rs["reglas_estaticas"], Rvs["reglas_estaticas"] = evaluar(
         "reglas_estaticas", np.zeros(len(dv)), np.zeros(len(dt)), dv, dt, cfg, (0.0,), dv["c_i"].to_numpy(), dt["c_i"].to_numpy())
 
-    iso = IsolationForest(n_estimators=200, max_samples=256, random_state=cfg.seed, n_jobs=-1).fit(Xtr)
-    s_v, s_t = -iso.score_samples(Xv), -iso.score_samples(Xt)
+    # Isolation Forest es una referencia fija: usa las variables de contexto de la v11, sin las variables por usuario.
+    ctx = [i for i, c in enumerate(X.columns) if c not in VARIABLES_USUARIO]
+    iso = IsolationForest(n_estimators=200, max_samples=256, random_state=cfg.seed, n_jobs=-1).fit(Xtr[:, ctx])
+    s_v, s_t = -iso.score_samples(Xv[:, ctx]), -iso.score_samples(Xt[:, ctx])
     s_ref = float(np.median(s_v[dv["anomalo"].to_numpy() == 0]))
     sp_v, sp_t = aa.rescale(s_v, s_ref), aa.rescale(s_t, s_ref)
     res["iforest"], decs["iforest"], Rs["iforest"], Rvs["iforest"] = evaluar("iforest", sp_v, sp_t, dv, dt, cfg)
@@ -225,7 +227,7 @@ def main():
     pi = permutation_importance(hgb, Xt, yt, scoring="average_precision", n_repeats=3, random_state=cfg.seed)
     imp_var = pd.Series(pi.importances_mean, index=cols).sort_values(ascending=False)
 
-    lat_if = aa.inference_latency_ms(iso, pd.DataFrame(Xt, columns=cols), features=cols)
+    lat_if = aa.inference_latency_ms(iso, pd.DataFrame(Xt[:, ctx], columns=[cols[i] for i in ctx]), features=[cols[i] for i in ctx])
     lat_sup = aa.inference_latency_ms(hgb, pd.DataFrame(Xt, columns=cols), features=cols)
     resultados = dict(
         dataset="SuspiciousLogin (Google Workspace, 2 instituciones)", archivo=args.data,
